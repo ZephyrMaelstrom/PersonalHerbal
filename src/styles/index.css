@@ -1,0 +1,44 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 150 30% 8%;
+    --foreground: 140 15% 92%;
+    --card: 150 25% 11%;
+    --card-foreground: 140 15% 92%;
+    --popover: 150 28% 10%;
+    --popover-foreground: 140 15% 92%;
+    --primary: 146 55% 40%;
+    --primary-foreground: 150 40% 97%;
+    --secondary: 150 18% 18%;
+    --secondary-foreground: 140 15% 92%;
+    --muted: 150 14% 16%;
+    --muted-foreground: 140 10% 62%;
+    --accent: 150 20% 20%;
+    --accent-foreground: 140 15% 95%;
+    --destructive: 0 62% 45%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 150 14% 22%;
+    --input: 150 14% 22%;
+    --ring: 146 55% 45%;
+    --radius: 0.6rem;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior-y: none;
+  }
+}
