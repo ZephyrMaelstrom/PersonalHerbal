@@ -1,5 +1,16 @@
 # Changelog
 
+## Phase 6 — Automatic on-device backups (data-loss safety net)
+
+- The app now keeps **automatic restore points** on-device: a snapshot is taken on launch
+  (throttled to ~30 min and only when data changed), plus one **right before any import**.
+  The newest 5 are kept and rotate.
+- Snapshots live in their own store that is **never cleared by import/restore**, so they
+  survive the exact action that caused this.
+- **Settings → Restore points** lists them (date, species/photo counts) with one-tap restore;
+  restoring also snapshots the current state first, so it's reversible.
+- Import already shows file contents vs current counts, warns on empty files, and offers Undo.
+
 ## Phase 5e — The ArchDruid persona
 
 - The conversational AI is now **the ArchDruid**: an extremely knowledgeable, eager-to-teach

@@ -34,12 +34,31 @@ export function useExportBackup() {
   });
 }
 
+/** On-device automatic restore points. */
+export function useSnapshots() {
+  return useQuery({ queryKey: ['snapshots'], queryFn: () => getStore().snapshots.list() });
+}
+
+export function useRestoreSnapshot() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      await getStore().snapshots.capture('pre-import'); // make the current state recoverable too
+      await getStore().snapshots.restore(id);
+    },
+    onSuccess: () => qc.invalidateQueries(),
+  });
+}
+
 /** Replace all local data with a backup, returning a snapshot of the PRIOR data for undo. */
 export function useImportBackup() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (data: BackupData) => {
+      // Durable pre-import restore point (survives even if the user navigates away), plus an
+      // in-memory snapshot returned for the immediate Undo toast.
       const snapshot = await getStore().backup.exportAll();
+      await getStore().snapshots.capture('pre-import');
       await getStore().backup.importAll(data);
       return snapshot;
     },

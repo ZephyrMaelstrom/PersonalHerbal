@@ -17,6 +17,7 @@ import type {
   PreparationInput,
   Sighting,
   SightingInput,
+  SnapshotMeta,
   Species,
   SpeciesInput,
   SpeciesNotes,
@@ -60,6 +61,8 @@ class VerdantDb extends Dexie {
   preparations!: Table<Preparation, string>;
   photos!: Table<Photo, string>;
   journal!: Table<JournalEntry, string>;
+  snapshots!: Table<SnapshotMeta, string>;
+  snapshotData!: Table<{ id: string; json: string }, string>;
 
   constructor() {
     super('verdant-codex');
@@ -82,6 +85,12 @@ class VerdantDb extends Dexie {
     this.version(3).stores({
       journal: 'id, date',
     });
+    // v4 adds on-device restore points. Deliberately NOT part of `allTables`, so imports
+    // and restores never clear them — they're the safety net.
+    this.version(4).stores({
+      snapshots: 'id, createdAt',
+      snapshotData: 'id',
+    });
   }
 
   get allTables(): Table[] {
@@ -100,8 +109,102 @@ class VerdantDb extends Dexie {
   }
 }
 
+const SNAPSHOT_LIMIT = 5;
+const AUTO_DEBOUNCE_MS = 30 * 60 * 1000;
+
 export function createDexieStore(): DataStore {
   const db = new VerdantDb();
+
+  // Shared export/import logic, reused by both manual backup and on-device snapshots.
+  async function doExport(): Promise<BackupData> {
+    const [species, notes, reference, userVocab, places, sightings, harvests, preparations, journal, photoRows] =
+      await Promise.all([
+        db.species.toArray(),
+        db.notes.toArray(),
+        db.reference.toArray(),
+        db.userVocab.toArray(),
+        db.places.toArray(),
+        db.sightings.toArray(),
+        db.harvests.toArray(),
+        db.preparations.toArray(),
+        db.journal.toArray(),
+        db.photos.toArray(),
+      ]);
+    const photos: BackupPhoto[] = await Promise.all(
+      photoRows.map(async ({ blob, ...rest }) => ({ ...rest, dataBase64: await blobToBase64(blob) })),
+    );
+    return {
+      app: 'verdant-codex',
+      version: BACKUP_VERSION,
+      exportedAt: new Date().toISOString(),
+      species,
+      notes,
+      reference,
+      userVocab,
+      places,
+      sightings,
+      harvests,
+      preparations,
+      journal,
+      photos,
+    };
+  }
+
+  async function doImport(data: BackupData): Promise<void> {
+    if (data.app !== 'verdant-codex') throw new Error('Not a Verdant Codex backup file.');
+    const photos: Photo[] = (data.photos ?? []).map(({ dataBase64, ...rest }) => ({
+      ...rest,
+      blob: base64ToBlob(dataBase64, rest.mime),
+    }));
+    await db.transaction('rw', db.allTables, async () => {
+      await Promise.all(db.allTables.map((t) => t.clear()));
+      await Promise.all([
+        db.species.bulkAdd(data.species ?? []),
+        db.notes.bulkAdd(data.notes ?? []),
+        db.reference.bulkAdd(data.reference ?? []),
+        db.userVocab.bulkAdd(data.userVocab ?? []),
+        db.places.bulkAdd(data.places ?? []),
+        db.sightings.bulkAdd(data.sightings ?? []),
+        db.harvests.bulkAdd(data.harvests ?? []),
+        db.preparations.bulkAdd(data.preparations ?? []),
+        db.journal.bulkAdd(data.journal ?? []),
+        db.photos.bulkAdd(photos),
+      ]);
+    });
+  }
+
+  function signatureOf(data: BackupData): string {
+    const latest = [...data.species, ...data.preparations].reduce((m, r) => (r.updatedAt > m ? r.updatedAt : m), '');
+    return [
+      data.species.length,
+      data.sightings.length,
+      data.harvests.length,
+      data.preparations.length,
+      data.journal.length,
+      data.photos.length,
+      latest,
+    ].join('|');
+  }
+
+  async function captureSnapshot(reason: SnapshotMeta['reason']): Promise<void> {
+    const data = await doExport();
+    const meta: SnapshotMeta = {
+      id: uid(),
+      createdAt: new Date().toISOString(),
+      reason,
+      signature: signatureOf(data),
+      speciesCount: data.species.length,
+      photoCount: data.photos.length,
+    };
+    await db.snapshots.add(meta);
+    await db.snapshotData.add({ id: meta.id, json: JSON.stringify(data) });
+    // Prune to the newest SNAPSHOT_LIMIT.
+    const all = await db.snapshots.orderBy('createdAt').reverse().toArray();
+    for (const old of all.slice(SNAPSHOT_LIMIT)) {
+      await db.snapshots.delete(old.id);
+      await db.snapshotData.delete(old.id);
+    }
+  }
 
   return {
     backend: 'indexeddb',
@@ -305,60 +408,31 @@ export function createDexieStore(): DataStore {
     },
 
     backup: {
-      async exportAll(): Promise<BackupData> {
-        const [species, notes, reference, userVocab, places, sightings, harvests, preparations, journal, photoRows] =
-          await Promise.all([
-            db.species.toArray(),
-            db.notes.toArray(),
-            db.reference.toArray(),
-            db.userVocab.toArray(),
-            db.places.toArray(),
-            db.sightings.toArray(),
-            db.harvests.toArray(),
-            db.preparations.toArray(),
-            db.journal.toArray(),
-            db.photos.toArray(),
-          ]);
-        const photos: BackupPhoto[] = await Promise.all(
-          photoRows.map(async ({ blob, ...rest }) => ({ ...rest, dataBase64: await blobToBase64(blob) })),
-        );
-        return {
-          app: 'verdant-codex',
-          version: BACKUP_VERSION,
-          exportedAt: new Date().toISOString(),
-          species,
-          notes,
-          reference,
-          userVocab,
-          places,
-          sightings,
-          harvests,
-          preparations,
-          journal,
-          photos,
-        };
+      exportAll: doExport,
+      importAll: doImport,
+    },
+
+    snapshots: {
+      list: () => db.snapshots.orderBy('createdAt').reverse().toArray(),
+      async maybeAuto() {
+        const data = await doExport();
+        if (data.species.length === 0) return; // nothing worth protecting
+        const last = (await db.snapshots.orderBy('createdAt').reverse().limit(1).toArray())[0];
+        if (last) {
+          if (last.signature === signatureOf(data)) return; // unchanged
+          if (Date.now() - Date.parse(last.createdAt) < AUTO_DEBOUNCE_MS) return; // too soon
+        }
+        await captureSnapshot('auto');
       },
-      async importAll(data: BackupData) {
-        if (data.app !== 'verdant-codex') throw new Error('Not a Verdant Codex backup file.');
-        const photos: Photo[] = data.photos.map(({ dataBase64, ...rest }) => ({
-          ...rest,
-          blob: base64ToBlob(dataBase64, rest.mime),
-        }));
-        await db.transaction('rw', db.allTables, async () => {
-          await Promise.all(db.allTables.map((t) => t.clear()));
-          await Promise.all([
-            db.species.bulkAdd(data.species),
-            db.notes.bulkAdd(data.notes),
-            db.reference.bulkAdd(data.reference),
-            db.userVocab.bulkAdd(data.userVocab),
-            db.places.bulkAdd(data.places),
-            db.sightings.bulkAdd(data.sightings),
-            db.harvests.bulkAdd(data.harvests),
-            db.preparations.bulkAdd(data.preparations),
-            db.journal.bulkAdd(data.journal ?? []),
-            db.photos.bulkAdd(photos),
-          ]);
-        });
+      capture: (reason) => captureSnapshot(reason),
+      async restore(id) {
+        const row = await db.snapshotData.get(id);
+        if (!row) throw new Error('Snapshot not found.');
+        await doImport(JSON.parse(row.json) as BackupData);
+      },
+      async remove(id) {
+        await db.snapshots.delete(id);
+        await db.snapshotData.delete(id);
       },
     },
   };

@@ -11,8 +11,12 @@ const queryClient = new QueryClient({
   defaultOptions: { queries: { staleTime: 1000 * 30, retry: false } },
 });
 
-// Open the local store eagerly so the first query doesn't race initialization.
-void getStore().ready();
+// Open the local store eagerly so the first query doesn't race initialization, then take an
+// automatic on-device restore point (throttled + change-detected inside maybeAuto).
+void getStore()
+  .ready()
+  .then(() => getStore().snapshots.maybeAuto())
+  .catch(() => {});
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

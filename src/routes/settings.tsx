@@ -13,9 +13,16 @@ import {
 import { useToast } from '@/components/ui/toast';
 import { cn } from '@/lib/utils';
 import { AI_MODELS, type AppSettings } from '@/lib/settings';
-import type { BackupData } from '@/lib/storage';
+import type { BackupData, SnapshotMeta } from '@/lib/storage';
 import { useInstallPrompt } from '@/lib/pwa';
-import { useExportBackup, useImportBackup, useSaveSettings, useSettings } from '@/features/settings/hooks';
+import {
+  useExportBackup,
+  useImportBackup,
+  useRestoreSnapshot,
+  useSaveSettings,
+  useSettings,
+  useSnapshots,
+} from '@/features/settings/hooks';
 import { useSpeciesList } from '@/features/species/hooks';
 
 function Choice({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
@@ -40,7 +47,21 @@ export function SettingsScreen() {
   const importBackup = useImportBackup();
   const { canInstall, promptInstall } = useInstallPrompt();
   const { data: currentSpecies = [] } = useSpeciesList();
+  const { data: snapshots = [] } = useSnapshots();
+  const restoreSnapshot = useRestoreSnapshot();
   const { toast } = useToast();
+  const [pendingRestore, setPendingRestore] = useState<SnapshotMeta | null>(null);
+
+  function confirmRestore() {
+    if (!pendingRestore) return;
+    restoreSnapshot.mutate(pendingRestore.id, {
+      onSuccess: () => {
+        toast({ message: 'Restored from a restore point' });
+        setPendingRestore(null);
+      },
+      onError: (err) => toast({ message: err instanceof Error ? err.message : 'Restore failed' }),
+    });
+  }
   const fileRef = useRef<HTMLInputElement>(null);
   const [pending, setPending] = useState<{ data: BackupData; name: string } | null>(null);
   const [form, setForm] = useState<AppSettings | null>(null);
@@ -182,6 +203,36 @@ export function SettingsScreen() {
         <input ref={fileRef} type="file" accept="application/json,.json" hidden onChange={onPickFile} />
       </section>
 
+      <section className="space-y-3 border-t pt-5">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Restore points</h2>
+        <p className="text-xs text-muted-foreground">
+          The app automatically keeps the last few on-device snapshots of your data (and one taken right before any
+          import). If something goes wrong, restore one here.
+        </p>
+        {snapshots.length === 0 ? (
+          <p className="text-xs text-muted-foreground">No restore points yet — one is taken automatically as you use the app.</p>
+        ) : (
+          <div className="space-y-2">
+            {snapshots.map((s) => (
+              <div key={s.id} className="flex items-center gap-3 rounded-md border p-2.5">
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm">
+                    {new Date(s.createdAt).toLocaleString()}
+                    {s.reason === 'pre-import' && <span className="ml-2 text-xs text-muted-foreground">(before import)</span>}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {s.speciesCount} species · {s.photoCount} photos
+                  </p>
+                </div>
+                <Button variant="outline" size="sm" onClick={() => setPendingRestore(s)}>
+                  Restore
+                </Button>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
       {canInstall && (
         <section className="space-y-3 border-t pt-5">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">App</h2>
@@ -225,6 +276,27 @@ export function SettingsScreen() {
             </Button>
             <Button variant="destructive" onClick={confirmImport} disabled={importBackup.isPending}>
               {importBackup.isPending ? 'Importing…' : 'Import & replace'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!pendingRestore} onOpenChange={(o) => !o && setPendingRestore(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Restore this point?</DialogTitle>
+            <DialogDescription>
+              This replaces your current data with the snapshot from{' '}
+              {pendingRestore && new Date(pendingRestore.createdAt).toLocaleString()} ({pendingRestore?.speciesCount}{' '}
+              species). Your current data is snapshotted first, so this is reversible.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setPendingRestore(null)}>
+              Cancel
+            </Button>
+            <Button onClick={confirmRestore} disabled={restoreSnapshot.isPending}>
+              {restoreSnapshot.isPending ? 'Restoring…' : 'Restore'}
             </Button>
           </div>
         </DialogContent>

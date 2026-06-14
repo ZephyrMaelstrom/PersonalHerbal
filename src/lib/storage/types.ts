@@ -166,6 +166,16 @@ export interface UserVocabRow extends VocabTerm {
   createdAt: string;
 }
 
+/** Metadata for an on-device restore point (the heavy payload is stored separately). */
+export interface SnapshotMeta {
+  id: string;
+  createdAt: string;
+  reason: 'auto' | 'pre-import';
+  signature: string;
+  speciesCount: number;
+  photoCount: number;
+}
+
 /** A photo serialized for backup (Blob → base64). */
 export type BackupPhoto = Omit<Photo, 'blob'> & { dataBase64: string };
 
@@ -283,5 +293,16 @@ export interface DataStore {
   backup: {
     exportAll(): Promise<BackupData>;
     importAll(data: BackupData): Promise<void>;
+  };
+
+  /** On-device automatic restore points. Survive imports (not in the cleared set). */
+  snapshots: {
+    list(): Promise<SnapshotMeta[]>;
+    /** Snapshot now if data is non-empty, changed since the last one, and not too recent. */
+    maybeAuto(): Promise<void>;
+    /** Force a snapshot (e.g. just before an import). */
+    capture(reason: SnapshotMeta['reason']): Promise<void>;
+    restore(id: string): Promise<void>;
+    remove(id: string): Promise<void>;
   };
 }

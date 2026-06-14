@@ -22,6 +22,7 @@ export type {
   JournalEntry,
   JournalEntryInput,
   BackupData,
+  SnapshotMeta,
 } from './types';
 
 /**
