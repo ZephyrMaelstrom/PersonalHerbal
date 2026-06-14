@@ -24,6 +24,8 @@ import {
   useSnapshots,
 } from '@/features/settings/hooks';
 import { useSpeciesList } from '@/features/species/hooks';
+import { COLLECTION_FORMATS } from '@/lib/export/collection';
+import { deliver } from '@/lib/export/share';
 
 function Choice({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
   return (
@@ -51,6 +53,20 @@ export function SettingsScreen() {
   const restoreSnapshot = useRestoreSnapshot();
   const { toast } = useToast();
   const [pendingRestore, setPendingRestore] = useState<SnapshotMeta | null>(null);
+
+  const [exporting, setExporting] = useState<string>();
+  async function runCollectionExport(id: string) {
+    const fmt = COLLECTION_FORMATS.find((f) => f.id === id);
+    if (!fmt) return;
+    setExporting(id);
+    try {
+      await deliver(await fmt.build());
+    } catch {
+      toast({ message: 'Export failed.' });
+    } finally {
+      setExporting(undefined);
+    }
+  }
 
   function confirmRestore() {
     if (!pendingRestore) return;
@@ -201,6 +217,21 @@ export function SettingsScreen() {
           <Upload /> Import / restore from a file
         </Button>
         <input ref={fileRef} type="file" accept="application/json,.json" hidden onChange={onPickFile} />
+      </section>
+
+      <section className="space-y-3 border-t pt-5">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Export for use elsewhere</h2>
+        <p className="text-xs text-muted-foreground">
+          Human-readable CSVs for spreadsheets and other tools. (Backup/restore above is the full-fidelity copy;
+          these are for sharing and analysis.) More formats will be added over time.
+        </p>
+        <div className="flex flex-wrap gap-2">
+          {COLLECTION_FORMATS.map((f) => (
+            <Button key={f.id} variant="outline" size="sm" disabled={!!exporting} onClick={() => runCollectionExport(f.id)}>
+              <Download /> {exporting === f.id ? 'Preparing…' : f.label}
+            </Button>
+          ))}
+        </div>
       </section>
 
       <section className="space-y-3 border-t pt-5">

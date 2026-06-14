@@ -1,5 +1,19 @@
 # Changelog
 
+## Phase 7a — Export & interoperability (CSV + outreach documents)
+
+Built on an extensible format registry (`src/lib/export/`) so new formats are a one-line add
+and the UI renders whatever is registered.
+
+### Added
+- **Export for use elsewhere** (Settings) — human-readable **CSV** exports for Species,
+  Sightings, Harvests, Preparations, and Journal (vocab rendered as labels), shared via the
+  Android share sheet or downloaded. Full-fidelity JSON backup is unchanged.
+- **Share / export a species** (species header) — outreach **monographs** in multiple formats:
+  **Print / Save as PDF**, **Markdown**, **plain text**, and **web page (HTML)**, combining
+  the species attributes with its generated reference. Planned future formats (field-guide
+  PDF, image "plant card", social caption) drop straight into the same registry.
+
 ## Phase 6 — Automatic on-device backups (data-loss safety net)
 
 - The app now keeps **automatic restore points** on-device: a snapshot is taken on launch

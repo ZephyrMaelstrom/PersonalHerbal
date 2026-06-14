@@ -22,6 +22,7 @@ import { ReferenceTab } from '@/features/reference/ReferenceTab';
 import { HistoryTab } from '@/features/reference/HistoryTab';
 import { SpeciesPhotoThumb } from '@/features/photos/SpeciesPhotoThumb';
 import { AskDialog } from '@/features/companion/AskDialog';
+import { SpeciesExportDialog } from '@/features/export/SpeciesExportDialog';
 import { useDeleteSpecies, useSpecies } from '@/features/species/hooks';
 import { labelFor } from '@/lib/vocab';
 
@@ -62,6 +63,7 @@ export function SpeciesDetailScreen() {
         </Button>
         <div className="flex gap-2">
           <AskDialog species={species} />
+          <SpeciesExportDialog speciesId={species.id} />
           <Button asChild variant="outline" size="sm">
             <Link to="/species/$speciesId/edit" params={{ speciesId: species.id }}>
               <Pencil /> Edit
