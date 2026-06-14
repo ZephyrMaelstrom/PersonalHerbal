@@ -8,6 +8,16 @@ export type {
   SpeciesNotes,
   SpeciesReference,
   UserVocabRow,
+  Place,
+  PlaceInput,
+  Sighting,
+  SightingInput,
+  Harvest,
+  HarvestInput,
+  Preparation,
+  PreparationInput,
+  Photo,
+  PhotoInput,
 } from './types';
 
 /**

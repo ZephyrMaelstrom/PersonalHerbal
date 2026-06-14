@@ -29,7 +29,9 @@ export type VocabId =
   | 'harvest_season'
   | 'moon_phase'
   | 'confidence'
-  | 'storage_form';
+  | 'storage_form'
+  | 'amount_unit'
+  | 'prep_state';
 
 /** Helper to turn a snake_case-ish code into a human label when none is given. */
 export function humanizeCode(code: string): string {

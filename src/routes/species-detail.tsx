@@ -15,6 +15,10 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { NotesTab } from '@/features/species/NotesTab';
+import { SightingsTab } from '@/features/sightings/SightingsTab';
+import { HarvestsTab } from '@/features/harvests/HarvestsTab';
+import { PreparationsTab } from '@/features/preparations/PreparationsTab';
+import { PhotosTab } from '@/features/photos/PhotosTab';
 import { useDeleteSpecies, useSpecies } from '@/features/species/hooks';
 import { labelFor } from '@/lib/vocab';
 
@@ -109,16 +113,16 @@ export function SpeciesDetailScreen() {
           <NotesTab speciesId={species.id} />
         </TabsContent>
         <TabsContent value="sightings">
-          <ComingSoon what="Sightings" />
+          <SightingsTab speciesId={species.id} />
         </TabsContent>
         <TabsContent value="harvests">
-          <ComingSoon what="Harvests" />
+          <HarvestsTab speciesId={species.id} />
         </TabsContent>
         <TabsContent value="preparations">
-          <ComingSoon what="Preparations" />
+          <PreparationsTab speciesId={species.id} />
         </TabsContent>
         <TabsContent value="photos">
-          <ComingSoon what="Photos" />
+          <PhotosTab speciesId={species.id} />
         </TabsContent>
         <TabsContent value="history">
           <ComingSoon what="Reference version history" />
