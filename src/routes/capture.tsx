@@ -87,6 +87,8 @@ export function CaptureScreen() {
       qc.invalidateQueries();
       toast({ message: 'Sighting logged' });
       navigate({ to: '/species/$speciesId', params: { speciesId } });
+    } catch (e) {
+      toast({ message: `Couldn't save: ${e instanceof Error ? e.message : 'unknown error'}` });
     } finally {
       setBusy(false);
     }

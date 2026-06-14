@@ -56,6 +56,9 @@ export function PhotosTab({ speciesId }: { speciesId: string }) {
       if (firstAddedId && !mainPhotoId) {
         await updateSpecies.mutateAsync({ mainPhotoId: firstAddedId });
       }
+      toast({ message: files.length > 1 ? `${files.length} photos added` : 'Photo added' });
+    } catch (e) {
+      toast({ message: `Couldn't add photo: ${e instanceof Error ? e.message : 'unknown error'}` });
     } finally {
       setBusy(false);
     }

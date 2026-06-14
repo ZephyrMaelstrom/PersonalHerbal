@@ -25,8 +25,10 @@ export function PhotoCapture({
 
   return (
     <div className="flex gap-2">
-      <input ref={cameraRef} type="file" accept="image/*" capture="environment" hidden onChange={handle} />
-      <input ref={libraryRef} type="file" accept="image/*" multiple hidden onChange={handle} />
+      {/* sr-only (not display:none) so programmatic .click() reliably opens the picker on
+          mobile browsers / installed PWAs. */}
+      <input ref={cameraRef} type="file" accept="image/*" capture="environment" className="sr-only" tabIndex={-1} onChange={handle} />
+      <input ref={libraryRef} type="file" accept="image/*" multiple className="sr-only" tabIndex={-1} onChange={handle} />
       <Button type="button" variant="outline" disabled={disabled} onClick={() => cameraRef.current?.click()}>
         <Camera /> Take photo
       </Button>
