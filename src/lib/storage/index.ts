@@ -19,6 +19,8 @@ export type {
   PreparationInput,
   Photo,
   PhotoInput,
+  AudioNote,
+  AudioNoteInput,
   JournalEntry,
   JournalEntryInput,
   Formula,

@@ -16,6 +16,10 @@ export interface AppSettings {
   units: 'imperial' | 'metric';
   /** Opt-in: streak, level, and achievements. Off by default to keep the calm tool feel. */
   gamification: boolean;
+  theme: 'forest' | 'parchment';
+  textScale: 'normal' | 'large';
+  /** Opt-in local reminders for due preparations etc. */
+  notifications: boolean;
 }
 
 export const AI_MODELS = [
@@ -32,6 +36,9 @@ const DEFAULTS: AppSettings = {
   region: '',
   units: 'imperial',
   gamification: false,
+  theme: 'forest',
+  textScale: 'normal',
+  notifications: false,
 };
 
 export function loadSettings(): AppSettings {

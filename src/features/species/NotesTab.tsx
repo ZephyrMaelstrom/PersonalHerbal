@@ -5,6 +5,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Field } from '@/components/inputs/Field';
 import { EnumSelect } from '@/components/inputs/EnumSelect';
 import { TagInput } from '@/components/inputs/TagInput';
+import { VoiceNotes } from '@/features/audio/VoiceNotes';
 import { useSaveNotes, useSpeciesNotes } from './hooks';
 import type { SpeciesNotes } from '@/lib/storage';
 
@@ -68,6 +69,9 @@ export function NotesTab({ speciesId }: { speciesId: string }) {
       </Field>
       <Field label="Custom tags">
         <TagInput value={form.customTags} onChange={(v) => set('customTags', v)} />
+      </Field>
+      <Field label="Voice notes">
+        <VoiceNotes speciesId={speciesId} />
       </Field>
 
       <div className="flex items-center gap-3">

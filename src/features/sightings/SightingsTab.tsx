@@ -11,6 +11,7 @@ import { useToast } from '@/components/ui/toast';
 import { PhotoCapture } from '@/features/photos/PhotoCapture';
 import { PhotoImg } from '@/features/photos/PhotoImg';
 import { processImage } from '@/features/photos/image';
+import { readPhotoMeta } from '@/features/photos/exif';
 import { useAddPhoto, useSpeciesPhotos } from '@/features/photos/hooks';
 import { LocationPicker, type LocationValue } from '@/features/places/LocationPicker';
 import { labelFor } from '@/lib/vocab';
@@ -110,7 +111,18 @@ export function SightingsTab({ speciesId }: { speciesId: string }) {
 
             <Field label="Photo">
               <div className="space-y-2">
-                <PhotoCapture onFiles={(files) => setFile(files[0] ?? null)} disabled={busy} />
+                <PhotoCapture
+                  onFiles={async (files) => {
+                    setFile(files[0] ?? null);
+                    if (files[0]) {
+                      const meta = await readPhotoMeta(files[0]);
+                      if (meta.date) setSeenAt(meta.date);
+                      if (meta.lat != null && meta.lng != null)
+                        setLocation((l) => ({ ...l, lat: meta.lat, lng: meta.lng, placeId: undefined }));
+                    }
+                  }}
+                  disabled={busy}
+                />
                 {file && <PhotoImg blob={file} className="h-32 w-32 rounded-md object-cover" />}
               </div>
             </Field>

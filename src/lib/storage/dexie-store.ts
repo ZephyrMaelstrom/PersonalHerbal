@@ -2,6 +2,9 @@ import Dexie, { type Table } from 'dexie';
 import type { VocabTerm } from '@/lib/vocab';
 import { uid } from '@/lib/utils';
 import type {
+  AudioNote,
+  AudioNoteInput,
+  BackupAudio,
   BackupData,
   BackupPhoto,
   DataStore,
@@ -67,6 +70,7 @@ class VerdantDb extends Dexie {
   journal!: Table<JournalEntry, string>;
   formulas!: Table<Formula, string>;
   inventory!: Table<InventoryItem, string>;
+  audio!: Table<AudioNote, string>;
   snapshots!: Table<SnapshotMeta, string>;
   snapshotData!: Table<{ id: string; json: string }, string>;
 
@@ -102,6 +106,10 @@ class VerdantDb extends Dexie {
       formulas: 'id, updatedAt',
       inventory: 'id, name, updatedAt',
     });
+    // v6 adds voice memos (additive).
+    this.version(6).stores({
+      audio: 'id, speciesId',
+    });
   }
 
   get allTables(): Table[] {
@@ -118,6 +126,7 @@ class VerdantDb extends Dexie {
       this.journal,
       this.formulas,
       this.inventory,
+      this.audio,
     ];
   }
 }
@@ -130,7 +139,7 @@ export function createDexieStore(): DataStore {
 
   // Shared export/import logic, reused by both manual backup and on-device snapshots.
   async function doExport(): Promise<BackupData> {
-    const [species, notes, reference, userVocab, places, sightings, harvests, preparations, journal, formulas, inventory, photoRows] =
+    const [species, notes, reference, userVocab, places, sightings, harvests, preparations, journal, formulas, inventory, photoRows, audioRows] =
       await Promise.all([
         db.species.toArray(),
         db.notes.toArray(),
@@ -144,9 +153,13 @@ export function createDexieStore(): DataStore {
         db.formulas.toArray(),
         db.inventory.toArray(),
         db.photos.toArray(),
+        db.audio.toArray(),
       ]);
     const photos: BackupPhoto[] = await Promise.all(
       photoRows.map(async ({ blob, ...rest }) => ({ ...rest, dataBase64: await blobToBase64(blob) })),
+    );
+    const audio: BackupAudio[] = await Promise.all(
+      audioRows.map(async ({ blob, ...rest }) => ({ ...rest, dataBase64: await blobToBase64(blob) })),
     );
     return {
       app: 'verdant-codex',
@@ -164,12 +177,17 @@ export function createDexieStore(): DataStore {
       formulas,
       inventory,
       photos,
+      audio,
     };
   }
 
   async function doImport(data: BackupData): Promise<void> {
     if (data.app !== 'verdant-codex') throw new Error('Not a Verdant Codex backup file.');
     const photos: Photo[] = (data.photos ?? []).map(({ dataBase64, ...rest }) => ({
+      ...rest,
+      blob: base64ToBlob(dataBase64, rest.mime),
+    }));
+    const audio: AudioNote[] = (data.audio ?? []).map(({ dataBase64, ...rest }) => ({
       ...rest,
       blob: base64ToBlob(dataBase64, rest.mime),
     }));
@@ -188,6 +206,7 @@ export function createDexieStore(): DataStore {
         db.formulas.bulkAdd(data.formulas ?? []),
         db.inventory.bulkAdd(data.inventory ?? []),
         db.photos.bulkAdd(photos),
+        db.audio.bulkAdd(audio),
       ]);
     });
   }
@@ -203,6 +222,7 @@ export function createDexieStore(): DataStore {
       data.formulas.length,
       data.inventory.length,
       data.photos.length,
+      data.audio.length,
       latest,
     ].join('|');
   }
@@ -259,7 +279,7 @@ export function createDexieStore(): DataStore {
       async remove(id) {
         await db.transaction(
           'rw',
-          [db.species, db.notes, db.reference, db.sightings, db.harvests, db.preparations, db.photos],
+          [db.species, db.notes, db.reference, db.sightings, db.harvests, db.preparations, db.photos, db.audio],
           async () => {
             await db.species.delete(id);
             await db.notes.delete(id);
@@ -268,6 +288,7 @@ export function createDexieStore(): DataStore {
             await db.harvests.where('speciesId').equals(id).delete();
             await db.preparations.where('speciesId').equals(id).delete();
             await db.photos.where('speciesId').equals(id).delete();
+            await db.audio.where('speciesId').equals(id).delete();
           },
         );
       },
@@ -341,11 +362,15 @@ export function createDexieStore(): DataStore {
         await db.sightings.add(record);
         return record;
       },
+      async update(id, patch) {
+        await db.sightings.update(id, patch);
+      },
       async remove(id) {
         await db.transaction('rw', db.sightings, db.photos, async () => {
           const sighting = await db.sightings.get(id);
           await db.sightings.delete(id);
-          // Drop the photo captured for this sighting, if any.
+          // Remove photos linked by sightingId (multi-photo capture) and the representative.
+          await db.photos.where('sightingId').equals(id).delete();
           if (sighting?.photoId) await db.photos.delete(sighting.photoId);
         });
       },
@@ -390,6 +415,17 @@ export function createDexieStore(): DataStore {
         return record;
       },
       remove: (id) => db.photos.delete(id),
+    },
+
+    audio: {
+      listForSpecies: (speciesId) =>
+        db.audio.where('speciesId').equals(speciesId).reverse().sortBy('createdAt'),
+      async add(input: AudioNoteInput) {
+        const record: AudioNote = { ...input, id: uid(), createdAt: new Date().toISOString() };
+        await db.audio.add(record);
+        return record;
+      },
+      remove: (id) => db.audio.delete(id),
     },
 
     userVocab: {

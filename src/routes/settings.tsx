@@ -124,6 +124,16 @@ export function SettingsScreen() {
   const set = <K extends keyof AppSettings>(key: K, value: AppSettings[K]) =>
     setForm((f) => (f ? { ...f, [key]: value } : f));
 
+  async function enableNotifications() {
+    if (typeof Notification === 'undefined') {
+      toast({ message: 'Notifications are not supported here.' });
+      return;
+    }
+    const perm = await Notification.requestPermission();
+    if (perm === 'granted') set('notifications', true);
+    else toast({ message: 'Notification permission was not granted.' });
+  }
+
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-semibold tracking-tight">Settings</h1>
@@ -181,6 +191,44 @@ export function SettingsScreen() {
               On
             </Choice>
             <Choice active={!form.gamification} onClick={() => set('gamification', false)}>
+              Off
+            </Choice>
+          </div>
+        </Field>
+      </section>
+
+      <section className="space-y-4">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Appearance</h2>
+        <Field label="Theme">
+          <div className="flex gap-2">
+            <Choice active={form.theme === 'forest'} onClick={() => set('theme', 'forest')}>
+              Forest (dark)
+            </Choice>
+            <Choice active={form.theme === 'parchment'} onClick={() => set('theme', 'parchment')}>
+              Parchment (light)
+            </Choice>
+          </div>
+        </Field>
+        <Field label="Text size">
+          <div className="flex gap-2">
+            <Choice active={form.textScale === 'normal'} onClick={() => set('textScale', 'normal')}>
+              Normal
+            </Choice>
+            <Choice active={form.textScale === 'large'} onClick={() => set('textScale', 'large')}>
+              Large
+            </Choice>
+          </div>
+        </Field>
+      </section>
+
+      <section className="space-y-4">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Reminders</h2>
+        <Field label="Preparation reminders" hint="Notifies you when a preparation is ready to press, when you open the app.">
+          <div className="flex gap-2">
+            <Choice active={form.notifications} onClick={enableNotifications}>
+              On
+            </Choice>
+            <Choice active={!form.notifications} onClick={() => set('notifications', false)}>
               Off
             </Choice>
           </div>

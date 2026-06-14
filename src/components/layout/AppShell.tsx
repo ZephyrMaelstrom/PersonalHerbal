@@ -1,11 +1,13 @@
-import type { ReactNode } from 'react';
+import { useEffect, type ReactNode } from 'react';
 import { Link, useRouterState } from '@tanstack/react-router';
 import { CalendarDays, Camera, Home, Leaf, NotebookPen, Search, Settings, WifiOff } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useOnline } from '@/lib/pwa';
 import { ReloadPrompt } from '@/components/layout/ReloadPrompt';
+import { applyAppearance } from '@/lib/appearance';
 import { useSettings } from '@/features/settings/hooks';
 import { useAchievementsWatcher } from '@/features/progress/hooks';
+import { useReminders } from '@/features/reminders/hooks';
 
 const NAV = [
   { to: '/', label: 'Today', icon: Home, exact: true },
@@ -20,6 +22,11 @@ export function AppShell({ children }: { children: ReactNode }) {
   const online = useOnline();
   const { data: settings } = useSettings();
   useAchievementsWatcher(settings?.gamification ?? false);
+  useReminders(settings?.notifications ?? false);
+
+  useEffect(() => {
+    if (settings) applyAppearance(settings);
+  }, [settings]);
 
   return (
     <div className="mx-auto flex min-h-full max-w-screen-sm flex-col">

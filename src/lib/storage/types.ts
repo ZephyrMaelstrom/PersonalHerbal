@@ -135,6 +135,15 @@ export interface Preparation {
   updatedAt: string;
 }
 
+/** A voice memo stored as a Blob, attached to a species (the private notes layer). */
+export interface AudioNote {
+  id: string;
+  speciesId: string;
+  blob: Blob;
+  mime: string;
+  createdAt: string;
+}
+
 /** A photo stored as a Blob in the local DB (no OPFS headers needed on Android). */
 export interface Photo {
   id: string;
@@ -211,6 +220,8 @@ export interface SnapshotMeta {
 
 /** A photo serialized for backup (Blob → base64). */
 export type BackupPhoto = Omit<Photo, 'blob'> & { dataBase64: string };
+/** A voice memo serialized for backup (Blob → base64). */
+export type BackupAudio = Omit<AudioNote, 'blob'> & { dataBase64: string };
 
 /** Full local-data snapshot for export/import. */
 export interface BackupData {
@@ -229,6 +240,7 @@ export interface BackupData {
   formulas: Formula[];
   inventory: InventoryItem[];
   photos: BackupPhoto[];
+  audio: BackupAudio[];
 }
 
 export type SpeciesInput = Omit<Species, 'id' | 'createdAt' | 'updatedAt'>;
@@ -242,6 +254,7 @@ export type SightingInput = Omit<Sighting, 'id' | 'createdAt'>;
 export type HarvestInput = Omit<Harvest, 'id' | 'createdAt'>;
 export type PreparationInput = Omit<Preparation, 'id' | 'createdAt' | 'updatedAt'>;
 export type PhotoInput = Omit<Photo, 'id' | 'createdAt'>;
+export type AudioNoteInput = Omit<AudioNote, 'id' | 'createdAt'>;
 export type JournalEntryInput = Omit<JournalEntry, 'id' | 'createdAt' | 'updatedAt'>;
 export type FormulaInput = Omit<Formula, 'id' | 'createdAt' | 'updatedAt'>;
 export type InventoryItemInput = Omit<InventoryItem, 'id' | 'createdAt' | 'updatedAt'>;
@@ -291,6 +304,13 @@ export interface DataStore {
     list(speciesId: string): Promise<Sighting[]>;
     listAll(): Promise<Sighting[]>;
     create(input: SightingInput): Promise<Sighting>;
+    update(id: string, patch: Partial<SightingInput>): Promise<void>;
+    remove(id: string): Promise<void>;
+  };
+
+  audio: {
+    listForSpecies(speciesId: string): Promise<AudioNote[]>;
+    add(input: AudioNoteInput): Promise<AudioNote>;
     remove(id: string): Promise<void>;
   };
 

@@ -1,5 +1,18 @@
 # Changelog
 
+## Phase 7d — Capture & polish (notifications, EXIF, voice notes, theme)
+
+### Added
+- **Photo auto-fill + multi-photo** — capturing photos reads EXIF and pre-fills the sighting's
+  date and GPS location; Quick Capture now accepts **multiple photos** per sighting.
+- **Voice notes** — record audio memos on a species (My Notes tab); stored locally and
+  included in backups, with playback and undo-delete.
+- **Reminders** — opt-in local notification when a preparation is ready to press (fires on
+  app open; PWAs can't guarantee true background delivery).
+- **Appearance** — a **Parchment** light theme alongside Forest (dark), and a **Large** text
+  size option, in Settings.
+- New `audio` store (Dexie v6), folded into backup/snapshots/import/signature.
+
 ## Phase 7c — Practitioner workbench (calculator, formulas, inventory)
 
 New **Workbench** hub (card on Today) gathering three tools:

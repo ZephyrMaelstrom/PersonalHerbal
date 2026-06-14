@@ -13,6 +13,7 @@ import { EMPTY_SPECIES } from '@/features/species/SpeciesForm';
 import { PhotoCapture } from '@/features/photos/PhotoCapture';
 import { PhotoImg } from '@/features/photos/PhotoImg';
 import { processImage } from '@/features/photos/image';
+import { readPhotoMeta } from '@/features/photos/exif';
 import { LocationPicker, type LocationValue } from '@/features/places/LocationPicker';
 import { SpeciesPicker } from '@/features/capture/SpeciesPicker';
 
@@ -29,14 +30,24 @@ export function CaptureScreen() {
   const qc = useQueryClient();
   const { toast } = useToast();
 
-  const [file, setFile] = useState<File | null>(null);
+  const [files, setFiles] = useState<File[]>([]);
   const [speciesId, setSpeciesId] = useState<string>();
   const [createdNew, setCreatedNew] = useState(false);
   const [confidence, setConfidence] = useState<string>();
   const [location, setLocation] = useState<LocationValue>({});
   const [seenAt, setSeenAt] = useState(today());
   const [notes, setNotes] = useState('');
+  const [autofilled, setAutofilled] = useState(false);
   const [busy, setBusy] = useState(false);
+
+  async function onFiles(picked: File[]) {
+    setFiles(picked);
+    // Auto-fill date & location from the first photo's EXIF, if available.
+    const meta = await readPhotoMeta(picked[0]);
+    if (meta.date) setSeenAt(meta.date);
+    if (meta.lat != null && meta.lng != null) setLocation((l) => ({ ...l, lat: meta.lat, lng: meta.lng, placeId: undefined }));
+    if (meta.date || meta.lat != null) setAutofilled(true);
+  }
 
   async function createSpecies(name: string): Promise<string> {
     const created = await store.species.create({ ...EMPTY_SPECIES, scientificName: name });
@@ -49,17 +60,8 @@ export function CaptureScreen() {
     if (!speciesId) return;
     setBusy(true);
     try {
-      let photoId: string | undefined;
-      if (file) {
-        const { blob, mime } = await processImage(file);
-        const photo = await store.photos.add({ speciesId, blob, mime });
-        photoId = photo.id;
-        // First photo of a brand-new species becomes its main photo.
-        if (createdNew) await store.species.update(speciesId, { mainPhotoId: photo.id });
-      }
-      await store.sightings.create({
+      const sighting = await store.sightings.create({
         speciesId,
-        photoId,
         placeId: location.placeId,
         placeName: location.placeName,
         lat: location.lat,
@@ -68,6 +70,17 @@ export function CaptureScreen() {
         seenAt,
         notes,
       });
+      // Add all selected photos, linked to this sighting; the first is the representative.
+      let firstPhotoId: string | undefined;
+      for (const f of files) {
+        const { blob, mime } = await processImage(f);
+        const photo = await store.photos.add({ speciesId, sightingId: sighting.id, blob, mime });
+        firstPhotoId ??= photo.id;
+      }
+      if (firstPhotoId) {
+        await store.sightings.update(sighting.id, { photoId: firstPhotoId });
+        if (createdNew) await store.species.update(speciesId, { mainPhotoId: firstPhotoId });
+      }
       qc.invalidateQueries();
       toast({ message: 'Sighting logged' });
       navigate({ to: '/species/$speciesId', params: { speciesId } });
@@ -86,10 +99,18 @@ export function CaptureScreen() {
 
       <h1 className="text-2xl font-semibold tracking-tight">Quick capture</h1>
 
-      <Field label="Photo">
+      <Field label="Photos">
         <div className="space-y-2">
-          <PhotoCapture onFiles={(files) => setFile(files[0] ?? null)} disabled={busy} />
-          {file && <PhotoImg blob={file} className="h-40 w-40 rounded-md object-cover" />}
+          <PhotoCapture onFiles={onFiles} disabled={busy} />
+          {files.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {files.slice(0, 4).map((f, i) => (
+                <PhotoImg key={i} blob={f} className="size-20 rounded-md object-cover" />
+              ))}
+              {files.length > 4 && <span className="self-center text-xs text-muted-foreground">+{files.length - 4} more</span>}
+            </div>
+          )}
+          {autofilled && <p className="text-xs text-muted-foreground">Date/location filled from photo.</p>}
         </div>
       </Field>
 
