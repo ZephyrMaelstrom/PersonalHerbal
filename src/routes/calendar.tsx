@@ -66,6 +66,15 @@ export function CalendarScreen() {
     return items.filter((i) => i.date).sort((a, b) => (a.date < b.date ? 1 : -1)).slice(0, 30);
   }, [sightings, harvests, journal, nameOf]);
 
+  const phenology = useMemo(
+    () =>
+      sightings
+        .filter((s) => s.phenophase)
+        .sort((a, b) => ((a.seenAt || '') < (b.seenAt || '') ? 1 : -1))
+        .slice(0, 20),
+    [sightings],
+  );
+
   return (
     <div className="space-y-5">
       <h1 className="text-2xl font-semibold tracking-tight">Calendar</h1>
@@ -100,6 +109,27 @@ export function CalendarScreen() {
           </div>
         )}
       </section>
+
+      {phenology.length > 0 && (
+        <section className="space-y-2">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Phenology</h2>
+          <div className="space-y-2">
+            {phenology.map((s) => (
+              <Link key={s.id} to="/species/$speciesId" params={{ speciesId: s.speciesId }}>
+                <Card className="transition-colors hover:border-primary/50">
+                  <CardContent className="flex items-center gap-3 p-3">
+                    <Leaf className="size-4 shrink-0 text-primary" />
+                    <p className="min-w-0 flex-1 truncate text-sm">
+                      <span className="italic">{nameOf(s.speciesId)}</span> — {labelFor('phenophase', s.phenophase!)}
+                    </p>
+                    <span className="shrink-0 text-xs text-muted-foreground">{s.seenAt?.slice(0, 10)}</span>
+                  </CardContent>
+                </Card>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
 
       <section className="space-y-2">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Recent activity</h2>

@@ -34,6 +34,7 @@ export function CaptureScreen() {
   const [speciesId, setSpeciesId] = useState<string>();
   const [createdNew, setCreatedNew] = useState(false);
   const [confidence, setConfidence] = useState<string>();
+  const [phenophase, setPhenophase] = useState<string>();
   const [location, setLocation] = useState<LocationValue>({});
   const [seenAt, setSeenAt] = useState(today());
   const [notes, setNotes] = useState('');
@@ -67,6 +68,7 @@ export function CaptureScreen() {
         lat: location.lat,
         lng: location.lng,
         confidence,
+        phenophase,
         seenAt,
         notes,
       });
@@ -120,6 +122,10 @@ export function CaptureScreen() {
 
       <Field label="Confidence">
         <EnumSelect vocab="confidence" value={confidence} onChange={setConfidence} />
+      </Field>
+
+      <Field label="Stage (phenophase)">
+        <EnumSelect vocab="phenophase" value={phenophase} onChange={setPhenophase} />
       </Field>
 
       <Field label="Location">

@@ -82,6 +82,8 @@ export interface Sighting {
   lng?: number;
   /** `confidence` vocab code. */
   confidence?: string;
+  /** `phenophase` vocab code — developmental stage when observed. */
+  phenophase?: string;
   /** ISO date (YYYY-MM-DD or full ISO). */
   seenAt: string;
   notes: string;
@@ -124,6 +126,8 @@ export interface Preparation {
   plantPart?: string;
   amount?: number;
   amountUnit?: string;
+  /** Source harvest lot this preparation was made from (traceability). */
+  harvestId?: string;
   /** `prep_state` vocab code. */
   state: string;
   startedAt: string;

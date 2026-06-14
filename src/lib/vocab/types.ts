@@ -31,7 +31,8 @@ export type VocabId =
   | 'confidence'
   | 'storage_form'
   | 'amount_unit'
-  | 'prep_state';
+  | 'prep_state'
+  | 'phenophase';
 
 /** Helper to turn a snake_case-ish code into a human label when none is given. */
 export function humanizeCode(code: string): string {

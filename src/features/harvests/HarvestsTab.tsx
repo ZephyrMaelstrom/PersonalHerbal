@@ -11,15 +11,34 @@ import { MultiSelectChips } from '@/components/inputs/MultiSelectChips';
 import { useToast } from '@/components/ui/toast';
 import { LocationPicker, type LocationValue } from '@/features/places/LocationPicker';
 import { labelFor } from '@/lib/vocab';
+import { useSpecies } from '@/features/species/hooks';
+import { useCreateInventory } from '@/features/inventory/hooks';
 import { useCreateHarvest, useDeleteHarvest, useHarvests } from './hooks';
 
 const today = () => new Date().toISOString().slice(0, 10);
 
 export function HarvestsTab({ speciesId }: { speciesId: string }) {
   const { data: harvests = [], isLoading } = useHarvests(speciesId);
+  const { data: species } = useSpecies(speciesId);
   const create = useCreateHarvest(speciesId);
   const del = useDeleteHarvest(speciesId);
+  const addInventory = useCreateInventory();
   const { toast } = useToast();
+
+  function toInventory(h: (typeof harvests)[number]) {
+    const part = h.plantPart ? labelFor('plant_part', h.plantPart) : 'harvest';
+    addInventory.mutate(
+      {
+        name: `${species?.scientificName ?? 'Species'} — ${part}`,
+        speciesId,
+        kind: 'herb',
+        quantity: h.amount ?? 0,
+        unit: h.amountUnit,
+        notes: '',
+      },
+      { onSuccess: () => toast({ message: 'Added to inventory' }) },
+    );
+  }
 
   function removeHarvest(h: (typeof harvests)[number]) {
     del.mutate(h.id);
@@ -174,6 +193,13 @@ export function HarvestsTab({ speciesId }: { speciesId: string }) {
                       </p>
                     )}
                     {h.notes && <p className="mt-1 line-clamp-2 text-sm">{h.notes}</p>}
+                    <button
+                      type="button"
+                      className="mt-1 text-xs text-primary underline"
+                      onClick={() => toInventory(h)}
+                    >
+                      + Add to inventory
+                    </button>
                   </div>
                   <Button
                     variant="ghost"

@@ -13,6 +13,7 @@ import { safetyFlag } from './safety-flag';
 import { harvestSeason, moonPhase, confidence, storageForm } from './misc';
 import { amountUnit } from './units';
 import { prepState } from './prep-state';
+import { phenophase } from './phenophase';
 
 export type { VocabId, VocabTerm } from './types';
 
@@ -42,6 +43,7 @@ export const VOCAB_REGISTRY: Record<VocabId, { label: string; seed: VocabTerm[] 
   storage_form: { label: 'Storage form', seed: storageForm },
   amount_unit: { label: 'Amount unit', seed: amountUnit },
   prep_state: { label: 'Preparation state', seed: prepState },
+  phenophase: { label: 'Phenophase', seed: phenophase },
 };
 
 export const ALL_VOCAB_IDS = Object.keys(VOCAB_REGISTRY) as VocabId[];

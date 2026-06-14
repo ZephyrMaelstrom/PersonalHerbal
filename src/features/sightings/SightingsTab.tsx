@@ -40,6 +40,7 @@ export function SightingsTab({ speciesId }: { speciesId: string }) {
           lat: s.lat,
           lng: s.lng,
           confidence: s.confidence,
+          phenophase: s.phenophase,
           seenAt: s.seenAt,
           notes: s.notes,
         }),
@@ -51,6 +52,7 @@ export function SightingsTab({ speciesId }: { speciesId: string }) {
   const [adding, setAdding] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [confidence, setConfidence] = useState<string>();
+  const [phenophase, setPhenophase] = useState<string>();
   const [location, setLocation] = useState<LocationValue>({});
   const [seenAt, setSeenAt] = useState(today());
   const [notes, setNotes] = useState('');
@@ -59,6 +61,7 @@ export function SightingsTab({ speciesId }: { speciesId: string }) {
   function reset() {
     setFile(null);
     setConfidence(undefined);
+    setPhenophase(undefined);
     setLocation({});
     setSeenAt(today());
     setNotes('');
@@ -82,6 +85,7 @@ export function SightingsTab({ speciesId }: { speciesId: string }) {
         lat: location.lat,
         lng: location.lng,
         confidence,
+        phenophase,
         seenAt,
         notes,
       });
@@ -129,6 +133,9 @@ export function SightingsTab({ speciesId }: { speciesId: string }) {
             <Field label="Confidence">
               <EnumSelect vocab="confidence" value={confidence} onChange={setConfidence} />
             </Field>
+            <Field label="Stage (phenophase)">
+              <EnumSelect vocab="phenophase" value={phenophase} onChange={setPhenophase} />
+            </Field>
             <Field label="Location">
               <LocationPicker value={location} onChange={setLocation} />
             </Field>
@@ -169,6 +176,7 @@ export function SightingsTab({ speciesId }: { speciesId: string }) {
                     <div className="flex items-center gap-2">
                       <p className="text-sm font-medium">{s.seenAt?.slice(0, 10)}</p>
                       {s.confidence && <Badge variant="secondary">{labelFor('confidence', s.confidence)}</Badge>}
+                      {s.phenophase && <Badge variant="secondary">{labelFor('phenophase', s.phenophase)}</Badge>}
                     </div>
                     {place && <p className="truncate text-sm text-muted-foreground">{place}</p>}
                     {s.notes && <p className="mt-1 line-clamp-2 text-sm">{s.notes}</p>}

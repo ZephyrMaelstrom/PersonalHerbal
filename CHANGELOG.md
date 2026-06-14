@@ -1,5 +1,15 @@
 # Changelog
 
+## Phase 8a — Traceability & phenology
+
+### Added
+- **Traceability + inventory drawdown** — a preparation can be linked to the **source harvest
+  lot** it was made from (shown on the card), and creating one can **deduct the amount used
+  from an inventory item**. Harvests gain a one-tap **"Add to inventory"**.
+- **Phenology** — record a **phenophase** (budding/flowering/fruiting/…) on sightings and Quick
+  Capture; the Calendar gains a **Phenology** log (your personal bloom record). New
+  `phenophase` vocabulary.
+
 ## Phase 7d — Capture & polish (notifications, EXIF, voice notes, theme)
 
 ### Added
