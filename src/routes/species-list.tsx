@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Link } from '@tanstack/react-router';
-import { Leaf, Plus, SlidersHorizontal, X } from 'lucide-react';
+import { LayoutGrid, Leaf, List, Plus, SlidersHorizontal, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
@@ -16,6 +16,7 @@ export function SpeciesListScreen() {
   const { data: species = [], isLoading } = useSpeciesList();
   const [search, setSearch] = useState('');
   const [showFilters, setShowFilters] = useState(false);
+  const [view, setView] = useState<'list' | 'grid'>('list');
   const [edibility, setEdibility] = useState<string>();
   const [nativeStatus, setNativeStatus] = useState<string>();
   const [actions, setActions] = useState<string[]>([]);
@@ -72,6 +73,15 @@ export function SpeciesListScreen() {
         <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search name or family…" />
         <Button
           type="button"
+          variant="outline"
+          size="icon"
+          onClick={() => setView((v) => (v === 'list' ? 'grid' : 'list'))}
+          aria-label={view === 'list' ? 'Gallery view' : 'List view'}
+        >
+          {view === 'list' ? <LayoutGrid /> : <List />}
+        </Button>
+        <Button
+          type="button"
           variant={activeFilterCount ? 'default' : 'outline'}
           size="icon"
           onClick={() => setShowFilters((v) => !v)}
@@ -124,6 +134,22 @@ export function SpeciesListScreen() {
             </p>
           </CardContent>
         </Card>
+      ) : view === 'grid' ? (
+        <div className="grid grid-cols-2 gap-2">
+          {filtered.map((s) => (
+            <Link key={s.id} to="/species/$speciesId" params={{ speciesId: s.id }}>
+              <Card className="overflow-hidden transition-colors hover:border-primary/50">
+                <SpeciesPhotoThumb photoId={s.mainPhotoId} className="aspect-square w-full rounded-none border-0" />
+                <CardContent className="p-2.5">
+                  <p className="truncate text-sm font-medium italic">{s.scientificName}</p>
+                  {s.commonNames.length > 0 && (
+                    <p className="truncate text-xs text-muted-foreground">{s.commonNames[0]}</p>
+                  )}
+                </CardContent>
+              </Card>
+            </Link>
+          ))}
+        </div>
       ) : (
         <div className="space-y-2">
           {filtered.map((s) => (

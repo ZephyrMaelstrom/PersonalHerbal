@@ -1,5 +1,18 @@
 # Changelog
 
+## Phase 5b — Visual herbarium (engagement drop 2)
+
+### Added
+- **Gallery view** on the Species screen — a photo-forward 2-column grid (toggle between
+  list and gallery).
+- **Map of finds** (`/map`, linked from Today) — an interactive Leaflet/OpenStreetMap map
+  pinning every sighting and harvest that has coordinates; tap a pin to jump to the species.
+  (Map tiles need a connection; the rest of the app stays offline.)
+
+### Deferred
+- Botanical/parchment **theme** — held back to avoid a risky full re-palette; can follow as
+  a focused polish pass.
+
 ## Phase 5a — Field Companion (engagement drop 1)
 
 Make the app worth opening daily and frictionless to capture in the field.

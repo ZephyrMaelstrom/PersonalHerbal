@@ -5,6 +5,7 @@ import {
   CalendarDays,
   FlaskConical,
   Leaf,
+  Map as MapIcon,
   MapPin,
   NotebookPen,
   Plus,
@@ -29,6 +30,7 @@ const QUICK_LINKS = [
   { to: '/journal', label: 'Journal', icon: NotebookPen },
   { to: '/calendar', label: 'Calendar', icon: CalendarDays },
   { to: '/places', label: 'Places', icon: MapPin },
+  { to: '/map', label: 'Map', icon: MapIcon },
 ] as const;
 
 const fmtTime = (d: Date) => d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
@@ -164,7 +166,7 @@ export function TodayScreen() {
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-4 gap-2">
         {QUICK_LINKS.map(({ to, label, icon: Icon }) => (
           <Link key={to} to={to}>
             <Card className="transition-colors hover:border-primary/50">
