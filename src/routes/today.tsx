@@ -14,6 +14,7 @@ import {
   Sunrise,
   Sunset,
   Trophy,
+  Wrench,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -208,6 +209,18 @@ export function TodayScreen() {
             <div className="flex-1">
               <p className="text-sm font-medium">Consult the ArchDruid</p>
               <p className="text-xs text-muted-foreground">Your teacher in plants & medicine — ask anything</p>
+            </div>
+          </CardContent>
+        </Card>
+      </Link>
+
+      <Link to="/workbench">
+        <Card className="transition-colors hover:border-primary/50">
+          <CardContent className="flex items-center gap-3 p-3.5">
+            <Wrench className="size-5 shrink-0 text-primary" />
+            <div className="flex-1">
+              <p className="text-sm font-medium">Workbench</p>
+              <p className="text-xs text-muted-foreground">Calculator, formulas & inventory</p>
             </div>
           </CardContent>
         </Card>

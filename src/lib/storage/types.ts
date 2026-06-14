@@ -166,6 +166,39 @@ export interface UserVocabRow extends VocabTerm {
   createdAt: string;
 }
 
+/** One component of a formula, by parts (ratio). Optionally linked to a species. */
+export interface FormulaIngredient {
+  speciesId?: string;
+  name: string;
+  parts: number;
+}
+
+/** A saved herbal formula: ingredients in parts, scalable to any batch size. */
+export interface Formula {
+  id: string;
+  name: string;
+  ingredients: FormulaIngredient[];
+  notes: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** A stock item: dried herb, finished preparation, or other supply. */
+export interface InventoryItem {
+  id: string;
+  name: string;
+  speciesId?: string;
+  kind: 'herb' | 'preparation' | 'other';
+  quantity: number;
+  /** `amount_unit` vocab code. */
+  unit?: string;
+  /** Flag as low when quantity drops to/under this. */
+  lowThreshold?: number;
+  notes: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 /** Metadata for an on-device restore point (the heavy payload is stored separately). */
 export interface SnapshotMeta {
   id: string;
@@ -193,6 +226,8 @@ export interface BackupData {
   harvests: Harvest[];
   preparations: Preparation[];
   journal: JournalEntry[];
+  formulas: Formula[];
+  inventory: InventoryItem[];
   photos: BackupPhoto[];
 }
 
@@ -208,6 +243,8 @@ export type HarvestInput = Omit<Harvest, 'id' | 'createdAt'>;
 export type PreparationInput = Omit<Preparation, 'id' | 'createdAt' | 'updatedAt'>;
 export type PhotoInput = Omit<Photo, 'id' | 'createdAt'>;
 export type JournalEntryInput = Omit<JournalEntry, 'id' | 'createdAt' | 'updatedAt'>;
+export type FormulaInput = Omit<Formula, 'id' | 'createdAt' | 'updatedAt'>;
+export type InventoryItemInput = Omit<InventoryItem, 'id' | 'createdAt' | 'updatedAt'>;
 
 /**
  * Storage abstraction. All feature code talks to this interface only, so the backend
@@ -285,6 +322,21 @@ export interface DataStore {
     get(id: string): Promise<JournalEntry | undefined>;
     create(input: JournalEntryInput): Promise<JournalEntry>;
     update(id: string, patch: Partial<JournalEntryInput>): Promise<void>;
+    remove(id: string): Promise<void>;
+  };
+
+  formulas: {
+    list(): Promise<Formula[]>;
+    get(id: string): Promise<Formula | undefined>;
+    create(input: FormulaInput): Promise<Formula>;
+    update(id: string, patch: Partial<FormulaInput>): Promise<void>;
+    remove(id: string): Promise<void>;
+  };
+
+  inventory: {
+    list(): Promise<InventoryItem[]>;
+    create(input: InventoryItemInput): Promise<InventoryItem>;
+    update(id: string, patch: Partial<InventoryItemInput>): Promise<void>;
     remove(id: string): Promise<void>;
   };
 

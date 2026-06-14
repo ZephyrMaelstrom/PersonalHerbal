@@ -21,6 +21,11 @@ import { FindsMapScreen } from '@/routes/map';
 import { ProgressScreen } from '@/routes/progress';
 import { CompanionScreen } from '@/routes/companion';
 import { SearchScreen } from '@/routes/search';
+import { WorkbenchScreen } from '@/routes/workbench';
+import { CalculatorScreen } from '@/routes/calculator';
+import { FormulasScreen } from '@/routes/formulas';
+import { FormulaDetailScreen } from '@/routes/formula-detail';
+import { InventoryScreen } from '@/routes/inventory';
 
 const rootRoute = createRootRoute({
   component: () => (
@@ -82,6 +87,11 @@ const mapRoute = createRoute({ getParentRoute: () => rootRoute, path: '/map', co
 const progressRoute = createRoute({ getParentRoute: () => rootRoute, path: '/progress', component: ProgressScreen });
 const companionRoute = createRoute({ getParentRoute: () => rootRoute, path: '/companion', component: CompanionScreen });
 const searchRoute = createRoute({ getParentRoute: () => rootRoute, path: '/search', component: SearchScreen });
+const workbenchRoute = createRoute({ getParentRoute: () => rootRoute, path: '/workbench', component: WorkbenchScreen });
+const calculatorRoute = createRoute({ getParentRoute: () => rootRoute, path: '/calculator', component: CalculatorScreen });
+const formulasRoute = createRoute({ getParentRoute: () => rootRoute, path: '/formulas', component: FormulasScreen });
+const formulaDetailRoute = createRoute({ getParentRoute: () => rootRoute, path: '/formulas/$formulaId', component: FormulaDetailScreen });
+const inventoryRoute = createRoute({ getParentRoute: () => rootRoute, path: '/inventory', component: InventoryScreen });
 
 const routeTree = rootRoute.addChildren([
   indexRoute,
@@ -99,6 +109,11 @@ const routeTree = rootRoute.addChildren([
   progressRoute,
   companionRoute,
   searchRoute,
+  workbenchRoute,
+  calculatorRoute,
+  formulasRoute,
+  formulaDetailRoute,
+  inventoryRoute,
 ]);
 
 // Hash history keeps deep links and hard refreshes working on GitHub Pages (no server

@@ -1,5 +1,17 @@
 # Changelog
 
+## Phase 7c — Practitioner workbench (calculator, formulas, inventory)
+
+New **Workbench** hub (card on Today) gathering three tools:
+- **Calculator** — tincture weight:volume ratios, alcohol dilution (blend to a target %),
+  and weight/volume unit conversions.
+- **Formulas** — build blends by parts, scale to any batch size, and **share/print a label**;
+  full create/edit/delete with undo.
+- **Inventory** — track herbs & finished preparations with quantities, quick +/- adjust, and
+  **low-stock** flags.
+- New `formulas` and `inventory` stores (Dexie v5) are included in backup, auto-snapshots,
+  import, and signatures, so they're protected like everything else.
+
 ## Phase 7b — Knowledge (search, cross-linking, reference enrichment)
 
 ### Added

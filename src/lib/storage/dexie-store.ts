@@ -5,8 +5,12 @@ import type {
   BackupData,
   BackupPhoto,
   DataStore,
+  Formula,
+  FormulaInput,
   Harvest,
   HarvestInput,
+  InventoryItem,
+  InventoryItemInput,
   JournalEntry,
   JournalEntryInput,
   Photo,
@@ -61,6 +65,8 @@ class VerdantDb extends Dexie {
   preparations!: Table<Preparation, string>;
   photos!: Table<Photo, string>;
   journal!: Table<JournalEntry, string>;
+  formulas!: Table<Formula, string>;
+  inventory!: Table<InventoryItem, string>;
   snapshots!: Table<SnapshotMeta, string>;
   snapshotData!: Table<{ id: string; json: string }, string>;
 
@@ -91,6 +97,11 @@ class VerdantDb extends Dexie {
       snapshots: 'id, createdAt',
       snapshotData: 'id',
     });
+    // v5 adds the practitioner workbench: formulas and inventory (additive).
+    this.version(5).stores({
+      formulas: 'id, updatedAt',
+      inventory: 'id, name, updatedAt',
+    });
   }
 
   get allTables(): Table[] {
@@ -105,6 +116,8 @@ class VerdantDb extends Dexie {
       this.preparations,
       this.photos,
       this.journal,
+      this.formulas,
+      this.inventory,
     ];
   }
 }
@@ -117,7 +130,7 @@ export function createDexieStore(): DataStore {
 
   // Shared export/import logic, reused by both manual backup and on-device snapshots.
   async function doExport(): Promise<BackupData> {
-    const [species, notes, reference, userVocab, places, sightings, harvests, preparations, journal, photoRows] =
+    const [species, notes, reference, userVocab, places, sightings, harvests, preparations, journal, formulas, inventory, photoRows] =
       await Promise.all([
         db.species.toArray(),
         db.notes.toArray(),
@@ -128,6 +141,8 @@ export function createDexieStore(): DataStore {
         db.harvests.toArray(),
         db.preparations.toArray(),
         db.journal.toArray(),
+        db.formulas.toArray(),
+        db.inventory.toArray(),
         db.photos.toArray(),
       ]);
     const photos: BackupPhoto[] = await Promise.all(
@@ -146,6 +161,8 @@ export function createDexieStore(): DataStore {
       harvests,
       preparations,
       journal,
+      formulas,
+      inventory,
       photos,
     };
   }
@@ -168,6 +185,8 @@ export function createDexieStore(): DataStore {
         db.harvests.bulkAdd(data.harvests ?? []),
         db.preparations.bulkAdd(data.preparations ?? []),
         db.journal.bulkAdd(data.journal ?? []),
+        db.formulas.bulkAdd(data.formulas ?? []),
+        db.inventory.bulkAdd(data.inventory ?? []),
         db.photos.bulkAdd(photos),
       ]);
     });
@@ -181,6 +200,8 @@ export function createDexieStore(): DataStore {
       data.harvests.length,
       data.preparations.length,
       data.journal.length,
+      data.formulas.length,
+      data.inventory.length,
       data.photos.length,
       latest,
     ].join('|');
@@ -409,6 +430,35 @@ export function createDexieStore(): DataStore {
         await db.journal.update(id, { ...patch, updatedAt: new Date().toISOString() });
       },
       remove: (id) => db.journal.delete(id),
+    },
+
+    formulas: {
+      list: () => db.formulas.orderBy('updatedAt').reverse().toArray(),
+      get: (id) => db.formulas.get(id),
+      async create(input: FormulaInput) {
+        const now = new Date().toISOString();
+        const record: Formula = { ...input, id: uid(), createdAt: now, updatedAt: now };
+        await db.formulas.add(record);
+        return record;
+      },
+      async update(id, patch) {
+        await db.formulas.update(id, { ...patch, updatedAt: new Date().toISOString() });
+      },
+      remove: (id) => db.formulas.delete(id),
+    },
+
+    inventory: {
+      list: () => db.inventory.orderBy('name').toArray(),
+      async create(input: InventoryItemInput) {
+        const now = new Date().toISOString();
+        const record: InventoryItem = { ...input, id: uid(), createdAt: now, updatedAt: now };
+        await db.inventory.add(record);
+        return record;
+      },
+      async update(id, patch) {
+        await db.inventory.update(id, { ...patch, updatedAt: new Date().toISOString() });
+      },
+      remove: (id) => db.inventory.delete(id),
     },
 
     backup: {

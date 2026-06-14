@@ -21,6 +21,11 @@ export type {
   PhotoInput,
   JournalEntry,
   JournalEntryInput,
+  Formula,
+  FormulaInput,
+  FormulaIngredient,
+  InventoryItem,
+  InventoryItemInput,
   BackupData,
   SnapshotMeta,
 } from './types';
