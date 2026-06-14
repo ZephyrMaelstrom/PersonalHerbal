@@ -10,6 +10,9 @@ export interface AppSettings {
   model: string;
   /** Free-text region/bioregion sent as context to the model. */
   region: string;
+  /** Optional home coordinates for sunrise/sunset on Today. */
+  homeLat?: number;
+  homeLng?: number;
   units: 'imperial' | 'metric';
 }
 

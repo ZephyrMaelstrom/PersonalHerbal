@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { Link, useRouterState } from '@tanstack/react-router';
-import { CalendarDays, Home, Leaf, NotebookPen, Settings, WifiOff } from 'lucide-react';
+import { CalendarDays, Camera, Home, Leaf, NotebookPen, Settings, WifiOff } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useOnline } from '@/lib/pwa';
 import { ReloadPrompt } from '@/components/layout/ReloadPrompt';
@@ -31,6 +31,16 @@ export function AppShell({ children }: { children: ReactNode }) {
       </header>
 
       <main className="flex-1 px-4 py-4 pb-24">{children}</main>
+
+      {pathname !== '/capture' && (
+        <Link
+          to="/capture"
+          aria-label="Quick capture"
+          className="fixed bottom-20 right-4 z-30 flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform active:scale-95"
+        >
+          <Camera className="size-6" />
+        </Link>
+      )}
 
       <nav className="fixed inset-x-0 bottom-0 z-20 border-t bg-background/95 backdrop-blur">
         <div className="mx-auto flex max-w-screen-sm">

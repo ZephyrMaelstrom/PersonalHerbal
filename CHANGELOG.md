@@ -1,5 +1,22 @@
 # Changelog
 
+## Phase 5a — Field Companion (engagement drop 1)
+
+Make the app worth opening daily and frictionless to capture in the field.
+
+### Added
+- **Quick capture** — a camera FAB on every screen opens a streamlined flow: snap a photo,
+  pick *or create* a species inline, drop a pin, save a sighting. First photo of a new
+  species becomes its main photo automatically.
+- **Living Today**:
+  - **Moon phase** (offline) with illumination; **sunrise/sunset + daylight** once a home
+    location is set (one-tap GPS, computed offline).
+  - **In season now** — your species whose harvest seasons match the current season.
+  - **Plant of the day** — a daily species spotlight.
+  - **On this day** — past sightings/harvests/journal entries from the same date in prior years.
+- Offline astronomy (`src/lib/astro.ts`) and season mapping (`src/lib/season.ts`); optional
+  home coordinates in settings.
+
 ## Phase 4 — MVP round-out (dashboards, journal, backup, photos, polish)
 
 UX/feature pass to make the app feel complete.
