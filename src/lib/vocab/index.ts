@@ -50,12 +50,17 @@ export function seedTerms(id: VocabId): VocabTerm[] {
   return VOCAB_REGISTRY[id].seed;
 }
 
-/** Merge seed terms with user-added terms, de-duplicating by code (seed wins on label). */
+/**
+ * Merge seed terms with user-added terms, de-duplicating by code (seed wins on label).
+ * Sorted alphabetically by label so every dropdown is alphabetical by default.
+ */
 export function mergeVocab(id: VocabId, userTerms: VocabTerm[]): VocabTerm[] {
   const byCode = new Map<string, VocabTerm>();
   for (const t of seedTerms(id)) byCode.set(t.code, t);
   for (const t of userTerms) if (!byCode.has(t.code)) byCode.set(t.code, t);
-  return [...byCode.values()];
+  return [...byCode.values()].sort((a, b) =>
+    a.label.localeCompare(b.label, undefined, { sensitivity: 'base' }),
+  );
 }
 
 /** Resolve a code to its display label using seed + (optional) user terms. */

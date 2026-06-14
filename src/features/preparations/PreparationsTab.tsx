@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Field } from '@/components/inputs/Field';
 import { EnumSelect } from '@/components/inputs/EnumSelect';
+import { useToast } from '@/components/ui/toast';
 import { labelFor } from '@/lib/vocab';
 import { PREP_STATE_ORDER } from '@/lib/vocab/prep-state';
 import type { Preparation, PreparationInput } from '@/lib/storage';
@@ -32,6 +33,31 @@ export function PreparationsTab({ speciesId }: { speciesId: string }) {
   const create = useCreatePreparation(speciesId);
   const update = useUpdatePreparation(speciesId);
   const del = useDeletePreparation(speciesId);
+  const { toast } = useToast();
+
+  function removePrep(p: Preparation) {
+    del.mutate(p.id);
+    toast({
+      message: 'Preparation deleted',
+      actionLabel: 'Undo',
+      onAction: () =>
+        create.mutate({
+          speciesId,
+          method: p.method,
+          solvent: p.solvent,
+          ratio: p.ratio,
+          plantPart: p.plantPart,
+          amount: p.amount,
+          amountUnit: p.amountUnit,
+          state: p.state,
+          startedAt: p.startedAt,
+          readyAt: p.readyAt,
+          pressedAt: p.pressedAt,
+          bottledAt: p.bottledAt,
+          notes: p.notes,
+        }),
+    });
+  }
 
   const [adding, setAdding] = useState(false);
   const [method, setMethod] = useState<string>();
@@ -185,7 +211,7 @@ export function PreparationsTab({ speciesId }: { speciesId: string }) {
                       variant="ghost"
                       size="icon"
                       className="shrink-0 text-destructive-foreground/70"
-                      onClick={() => del.mutate(p.id)}
+                      onClick={() => removePrep(p)}
                     >
                       <Trash2 />
                     </Button>

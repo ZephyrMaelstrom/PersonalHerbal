@@ -9,6 +9,7 @@ import { Field } from '@/components/inputs/Field';
 import { EnumSelect } from '@/components/inputs/EnumSelect';
 import { MultiSelectChips } from '@/components/inputs/MultiSelectChips';
 import { useSpeciesList } from '@/features/species/hooks';
+import { SpeciesPhotoThumb } from '@/features/photos/SpeciesPhotoThumb';
 import { labelFor } from '@/lib/vocab';
 
 export function SpeciesListScreen() {
@@ -128,21 +129,24 @@ export function SpeciesListScreen() {
           {filtered.map((s) => (
             <Link key={s.id} to="/species/$speciesId" params={{ speciesId: s.id }}>
               <Card className="transition-colors hover:border-primary/50">
-                <CardContent className="space-y-2 p-3.5">
-                  <div>
-                    <p className="font-medium italic">{s.scientificName}</p>
-                    {s.commonNames.length > 0 && (
-                      <p className="text-sm text-muted-foreground">{s.commonNames.join(', ')}</p>
-                    )}
-                  </div>
-                  <div className="flex flex-wrap gap-1.5">
-                    {s.edibility && <Badge>{labelFor('edibility', s.edibility)}</Badge>}
-                    {s.nativeStatus && <Badge variant="secondary">{labelFor('native_status', s.nativeStatus)}</Badge>}
-                    {s.safetyFlags.slice(0, 2).map((f) => (
-                      <Badge key={f} variant="warning">
-                        {labelFor('safety_flag', f)}
-                      </Badge>
-                    ))}
+                <CardContent className="flex gap-3 p-3.5">
+                  <SpeciesPhotoThumb photoId={s.mainPhotoId} className="size-14" />
+                  <div className="min-w-0 flex-1 space-y-2">
+                    <div>
+                      <p className="font-medium italic">{s.scientificName}</p>
+                      {s.commonNames.length > 0 && (
+                        <p className="text-sm text-muted-foreground">{s.commonNames.join(', ')}</p>
+                      )}
+                    </div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {s.edibility && <Badge>{labelFor('edibility', s.edibility)}</Badge>}
+                      {s.nativeStatus && <Badge variant="secondary">{labelFor('native_status', s.nativeStatus)}</Badge>}
+                      {s.safetyFlags.slice(0, 2).map((f) => (
+                        <Badge key={f} variant="warning">
+                          {labelFor('safety_flag', f)}
+                        </Badge>
+                      ))}
+                    </div>
                   </div>
                 </CardContent>
               </Card>

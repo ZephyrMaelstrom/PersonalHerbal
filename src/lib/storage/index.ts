@@ -19,6 +19,9 @@ export type {
   PreparationInput,
   Photo,
   PhotoInput,
+  JournalEntry,
+  JournalEntryInput,
+  BackupData,
 } from './types';
 
 /**

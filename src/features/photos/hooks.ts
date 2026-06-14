@@ -11,6 +11,15 @@ export function useSpeciesPhotos(speciesId: string) {
   });
 }
 
+/** Load a single photo by id (used for the species' main thumbnail). */
+export function usePhoto(id?: string) {
+  return useQuery({
+    queryKey: ['photo', id],
+    queryFn: () => (id ? store.photos.get(id) : undefined),
+    enabled: !!id,
+  });
+}
+
 export function useAddPhoto(speciesId: string) {
   const qc = useQueryClient();
   return useMutation({

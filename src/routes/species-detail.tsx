@@ -20,6 +20,7 @@ import { PreparationsTab } from '@/features/preparations/PreparationsTab';
 import { PhotosTab } from '@/features/photos/PhotosTab';
 import { ReferenceTab } from '@/features/reference/ReferenceTab';
 import { HistoryTab } from '@/features/reference/HistoryTab';
+import { SpeciesPhotoThumb } from '@/features/photos/SpeciesPhotoThumb';
 import { useDeleteSpecies, useSpecies } from '@/features/species/hooks';
 import { labelFor } from '@/lib/vocab';
 
@@ -66,9 +67,14 @@ export function SpeciesDetailScreen() {
       </div>
 
       <header className="space-y-2">
-        <h1 className="text-2xl font-semibold italic tracking-tight">{species.scientificName}</h1>
-        {species.commonNames.length > 0 && <p className="text-muted-foreground">{species.commonNames.join(', ')}</p>}
-        {species.family && <p className="text-sm text-muted-foreground">Family: {species.family}</p>}
+        <div className="flex items-start gap-3">
+          <SpeciesPhotoThumb photoId={species.mainPhotoId} className="size-20" />
+          <div className="min-w-0 flex-1 space-y-1">
+            <h1 className="text-2xl font-semibold italic leading-tight tracking-tight">{species.scientificName}</h1>
+            {species.commonNames.length > 0 && <p className="text-muted-foreground">{species.commonNames.join(', ')}</p>}
+            {species.family && <p className="text-sm text-muted-foreground">Family: {species.family}</p>}
+          </div>
+        </div>
         {chips.length > 0 && (
           <div className="flex flex-wrap gap-1.5 pt-1">
             {chips.map((c) => (

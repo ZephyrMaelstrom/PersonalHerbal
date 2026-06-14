@@ -1,5 +1,37 @@
 # Changelog
 
+## Phase 4 — MVP round-out (dashboards, journal, backup, photos, polish)
+
+UX/feature pass to make the app feel complete.
+
+### Requested changes
+- **Alphabetical dropdowns** — every controlled-vocabulary picker is now sorted A→Z by label.
+- **Main photo beside species** — a thumbnail shows next to each species in the header and
+  the list. The first photo added becomes the main automatically; you can switch the main
+  from any photo (★) in the Photos tab. Deleting the main reassigns to another photo.
+- **Removed the bottom-nav "Add (+)"** — Add lives on the Species and Today screens.
+
+### Added
+- **Tab fix** — the species tab bar now wraps to two rows so Photos/History are always
+  reachable on a phone (previously clipped off-screen).
+- **Backup & Restore** (Settings) — export all data + photos to a JSON file; import replaces
+  on-device data (with a confirm dialog). Protects against browser-storage loss / phone moves.
+- **Today dashboard** — preparations "ready to press", quick links to Journal/Calendar/Places,
+  recent species with thumbnails, and an API-key nudge.
+- **Journal** (`/journal`) — dated entries with optional title, body, and species tagging.
+- **Calendar** (`/calendar`) — maturing/ready preparations plus a recent-activity agenda.
+- **Places** (`/places`) — saved locations with sighting/harvest counts, rename, and delete.
+- **Undo on delete** — sightings, harvests, preparations, photos, journal entries, and places
+  now delete via a toast with **Undo**.
+- **Global toasts**, an **offline indicator**, a **service-worker update prompt** ("New
+  version — Refresh"), and an **Install app** action in Settings.
+
+### Notes
+- Dexie schema bumped to v3 (adds the journal table; additive — existing data preserved).
+- Deferred: Android **share-target** (sharing a photo straight into a new sighting) — it needs
+  a custom service worker (injectManifest) plus query handling under hash routing; install +
+  offline indicator shipped instead.
+
 ## Phase 3 — AI reference generation, version history, Settings, edit species
 
 Completed the last "coming soon" tab and added the AI layer. Reference pages are

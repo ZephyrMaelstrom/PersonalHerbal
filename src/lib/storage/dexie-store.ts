@@ -2,9 +2,13 @@ import Dexie, { type Table } from 'dexie';
 import type { VocabTerm } from '@/lib/vocab';
 import { uid } from '@/lib/utils';
 import type {
+  BackupData,
+  BackupPhoto,
   DataStore,
   Harvest,
   HarvestInput,
+  JournalEntry,
+  JournalEntryInput,
   Photo,
   PhotoInput,
   Place,
@@ -20,6 +24,24 @@ import type {
   SpeciesReferenceInput,
   UserVocabRow,
 } from './types';
+
+const BACKUP_VERSION = 1;
+
+async function blobToBase64(blob: Blob): Promise<string> {
+  const bytes = new Uint8Array(await blob.arrayBuffer());
+  let binary = '';
+  for (let i = 0; i < bytes.length; i += 0x8000) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  }
+  return btoa(binary);
+}
+
+function base64ToBlob(b64: string, mime: string): Blob {
+  const binary = atob(b64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return new Blob([bytes], { type: mime });
+}
 
 /**
  * IndexedDB-backed store (via Dexie). Chosen as the v1 backend because it works on
@@ -37,6 +59,7 @@ class VerdantDb extends Dexie {
   harvests!: Table<Harvest, string>;
   preparations!: Table<Preparation, string>;
   photos!: Table<Photo, string>;
+  journal!: Table<JournalEntry, string>;
 
   constructor() {
     super('verdant-codex');
@@ -55,6 +78,25 @@ class VerdantDb extends Dexie {
       preparations: 'id, speciesId, state, startedAt',
       photos: 'id, speciesId, sightingId',
     });
+    // v3 adds the journal (additive).
+    this.version(3).stores({
+      journal: 'id, date',
+    });
+  }
+
+  get allTables(): Table[] {
+    return [
+      this.species,
+      this.notes,
+      this.reference,
+      this.userVocab,
+      this.places,
+      this.sightings,
+      this.harvests,
+      this.preparations,
+      this.photos,
+      this.journal,
+    ];
   }
 }
 
@@ -156,11 +198,16 @@ export function createDexieStore(): DataStore {
         await db.places.add(record);
         return record;
       },
+      async update(id, patch) {
+        await db.places.update(id, patch);
+      },
+      remove: (id) => db.places.delete(id),
     },
 
     sightings: {
       list: (speciesId) =>
         db.sightings.where('speciesId').equals(speciesId).reverse().sortBy('seenAt'),
+      listAll: () => db.sightings.reverse().sortBy('seenAt'),
       async create(input: SightingInput) {
         const record: Sighting = { ...input, id: uid(), createdAt: new Date().toISOString() };
         await db.sightings.add(record);
@@ -179,6 +226,7 @@ export function createDexieStore(): DataStore {
     harvests: {
       list: (speciesId) =>
         db.harvests.where('speciesId').equals(speciesId).reverse().sortBy('harvestedAt'),
+      listAll: () => db.harvests.reverse().sortBy('harvestedAt'),
       async create(input: HarvestInput) {
         const record: Harvest = { ...input, id: uid(), createdAt: new Date().toISOString() };
         await db.harvests.add(record);
@@ -190,6 +238,7 @@ export function createDexieStore(): DataStore {
     preparations: {
       list: (speciesId) =>
         db.preparations.where('speciesId').equals(speciesId).reverse().sortBy('startedAt'),
+      listAll: () => db.preparations.reverse().sortBy('startedAt'),
       get: (id) => db.preparations.get(id),
       async create(input: PreparationInput) {
         const now = new Date().toISOString();
@@ -236,6 +285,79 @@ export function createDexieStore(): DataStore {
           id: uid(),
           vocabId,
           createdAt: new Date().toISOString(),
+        });
+      },
+    },
+
+    journal: {
+      list: () => db.journal.orderBy('date').reverse().toArray(),
+      get: (id) => db.journal.get(id),
+      async create(input: JournalEntryInput) {
+        const now = new Date().toISOString();
+        const record: JournalEntry = { ...input, id: uid(), createdAt: now, updatedAt: now };
+        await db.journal.add(record);
+        return record;
+      },
+      async update(id, patch) {
+        await db.journal.update(id, { ...patch, updatedAt: new Date().toISOString() });
+      },
+      remove: (id) => db.journal.delete(id),
+    },
+
+    backup: {
+      async exportAll(): Promise<BackupData> {
+        const [species, notes, reference, userVocab, places, sightings, harvests, preparations, journal, photoRows] =
+          await Promise.all([
+            db.species.toArray(),
+            db.notes.toArray(),
+            db.reference.toArray(),
+            db.userVocab.toArray(),
+            db.places.toArray(),
+            db.sightings.toArray(),
+            db.harvests.toArray(),
+            db.preparations.toArray(),
+            db.journal.toArray(),
+            db.photos.toArray(),
+          ]);
+        const photos: BackupPhoto[] = await Promise.all(
+          photoRows.map(async ({ blob, ...rest }) => ({ ...rest, dataBase64: await blobToBase64(blob) })),
+        );
+        return {
+          app: 'verdant-codex',
+          version: BACKUP_VERSION,
+          exportedAt: new Date().toISOString(),
+          species,
+          notes,
+          reference,
+          userVocab,
+          places,
+          sightings,
+          harvests,
+          preparations,
+          journal,
+          photos,
+        };
+      },
+      async importAll(data: BackupData) {
+        if (data.app !== 'verdant-codex') throw new Error('Not a Verdant Codex backup file.');
+        const photos: Photo[] = data.photos.map(({ dataBase64, ...rest }) => ({
+          ...rest,
+          blob: base64ToBlob(dataBase64, rest.mime),
+        }));
+        await db.transaction('rw', db.allTables, async () => {
+          await Promise.all(db.allTables.map((t) => t.clear()));
+          await Promise.all([
+            db.species.bulkAdd(data.species),
+            db.notes.bulkAdd(data.notes),
+            db.reference.bulkAdd(data.reference),
+            db.userVocab.bulkAdd(data.userVocab),
+            db.places.bulkAdd(data.places),
+            db.sightings.bulkAdd(data.sightings),
+            db.harvests.bulkAdd(data.harvests),
+            db.preparations.bulkAdd(data.preparations),
+            db.journal.bulkAdd(data.journal ?? []),
+            db.photos.bulkAdd(photos),
+          ]);
         });
       },
     },

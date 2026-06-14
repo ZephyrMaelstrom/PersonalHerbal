@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Field } from '@/components/inputs/Field';
 import { EnumSelect } from '@/components/inputs/EnumSelect';
 import { MultiSelectChips } from '@/components/inputs/MultiSelectChips';
+import { useToast } from '@/components/ui/toast';
 import { LocationPicker, type LocationValue } from '@/features/places/LocationPicker';
 import { labelFor } from '@/lib/vocab';
 import { useCreateHarvest, useDeleteHarvest, useHarvests } from './hooks';
@@ -18,6 +19,30 @@ export function HarvestsTab({ speciesId }: { speciesId: string }) {
   const { data: harvests = [], isLoading } = useHarvests(speciesId);
   const create = useCreateHarvest(speciesId);
   const del = useDeleteHarvest(speciesId);
+  const { toast } = useToast();
+
+  function removeHarvest(h: (typeof harvests)[number]) {
+    del.mutate(h.id);
+    toast({
+      message: 'Harvest deleted',
+      actionLabel: 'Undo',
+      onAction: () =>
+        create.mutate({
+          speciesId,
+          plantPart: h.plantPart,
+          amount: h.amount,
+          amountUnit: h.amountUnit,
+          condition: h.condition,
+          placeId: h.placeId,
+          placeName: h.placeName,
+          lat: h.lat,
+          lng: h.lng,
+          intendedUse: h.intendedUse,
+          harvestedAt: h.harvestedAt,
+          notes: h.notes,
+        }),
+    });
+  }
 
   const [adding, setAdding] = useState(false);
   const [plantPart, setPlantPart] = useState<string>();
@@ -154,7 +179,7 @@ export function HarvestsTab({ speciesId }: { speciesId: string }) {
                     variant="ghost"
                     size="icon"
                     className="shrink-0 text-destructive-foreground/70"
-                    onClick={() => del.mutate(h.id)}
+                    onClick={() => removeHarvest(h)}
                   >
                     <Trash2 />
                   </Button>

@@ -32,7 +32,7 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      registerType: 'autoUpdate',
+      registerType: 'prompt',
       includeAssets: ['favicon.svg', 'icons/apple-touch-icon-180.png'],
       manifest: {
         name: 'Verdant Codex',

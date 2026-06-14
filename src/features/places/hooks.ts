@@ -14,3 +14,20 @@ export function useCreatePlace() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['places'] }),
   });
 }
+
+export function useUpdatePlace() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, patch }: { id: string; patch: Partial<PlaceInput> }) =>
+      store.places.update(id, patch),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['places'] }),
+  });
+}
+
+export function useDeletePlace() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => store.places.remove(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['places'] }),
+  });
+}

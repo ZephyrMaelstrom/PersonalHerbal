@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Field } from '@/components/inputs/Field';
 import { EnumSelect } from '@/components/inputs/EnumSelect';
+import { useToast } from '@/components/ui/toast';
 import { PhotoCapture } from '@/features/photos/PhotoCapture';
 import { PhotoImg } from '@/features/photos/PhotoImg';
 import { processImage } from '@/features/photos/image';
@@ -23,6 +24,26 @@ export function SightingsTab({ speciesId }: { speciesId: string }) {
   const create = useCreateSighting(speciesId);
   const del = useDeleteSighting(speciesId);
   const addPhoto = useAddPhoto(speciesId);
+  const { toast } = useToast();
+
+  function removeSighting(s: (typeof sightings)[number]) {
+    del.mutate(s.id);
+    toast({
+      message: 'Sighting deleted',
+      actionLabel: 'Undo',
+      onAction: () =>
+        create.mutate({
+          speciesId,
+          placeId: s.placeId,
+          placeName: s.placeName,
+          lat: s.lat,
+          lng: s.lng,
+          confidence: s.confidence,
+          seenAt: s.seenAt,
+          notes: s.notes,
+        }),
+    });
+  }
 
   const photoById = useMemo(() => new Map(photos.map((p) => [p.id, p])), [photos]);
 
@@ -144,7 +165,7 @@ export function SightingsTab({ speciesId }: { speciesId: string }) {
                     variant="ghost"
                     size="icon"
                     className="shrink-0 text-destructive-foreground/70"
-                    onClick={() => del.mutate(s.id)}
+                    onClick={() => removeSighting(s)}
                   >
                     <Trash2 />
                   </Button>

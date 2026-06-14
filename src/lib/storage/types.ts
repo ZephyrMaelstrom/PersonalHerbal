@@ -27,6 +27,8 @@ export interface Species {
   energeticsTemperature?: string;
   energeticsMoisture?: string;
   energeticsTastes: string[];
+  /** Id of the photo shown beside the species. Defaults to the first photo added. */
+  mainPhotoId?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -145,11 +147,43 @@ export interface Photo {
   createdAt: string;
 }
 
+/** A dated journal entry, optionally tagged with species. */
+export interface JournalEntry {
+  id: string;
+  /** YYYY-MM-DD */
+  date: string;
+  title?: string;
+  body: string;
+  speciesIds: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
 /** A user-added vocabulary term persisted so it reappears in future dropdowns. */
 export interface UserVocabRow extends VocabTerm {
   id: string;
   vocabId: string;
   createdAt: string;
+}
+
+/** A photo serialized for backup (Blob → base64). */
+export type BackupPhoto = Omit<Photo, 'blob'> & { dataBase64: string };
+
+/** Full local-data snapshot for export/import. */
+export interface BackupData {
+  app: 'verdant-codex';
+  version: number;
+  exportedAt: string;
+  species: Species[];
+  notes: SpeciesNotes[];
+  reference: SpeciesReference[];
+  userVocab: UserVocabRow[];
+  places: Place[];
+  sightings: Sighting[];
+  harvests: Harvest[];
+  preparations: Preparation[];
+  journal: JournalEntry[];
+  photos: BackupPhoto[];
 }
 
 export type SpeciesInput = Omit<Species, 'id' | 'createdAt' | 'updatedAt'>;
@@ -163,6 +197,7 @@ export type SightingInput = Omit<Sighting, 'id' | 'createdAt'>;
 export type HarvestInput = Omit<Harvest, 'id' | 'createdAt'>;
 export type PreparationInput = Omit<Preparation, 'id' | 'createdAt' | 'updatedAt'>;
 export type PhotoInput = Omit<Photo, 'id' | 'createdAt'>;
+export type JournalEntryInput = Omit<JournalEntry, 'id' | 'createdAt' | 'updatedAt'>;
 
 /**
  * Storage abstraction. All feature code talks to this interface only, so the backend
@@ -198,22 +233,27 @@ export interface DataStore {
   places: {
     list(): Promise<Place[]>;
     create(input: PlaceInput): Promise<Place>;
+    update(id: string, patch: Partial<PlaceInput>): Promise<void>;
+    remove(id: string): Promise<void>;
   };
 
   sightings: {
     list(speciesId: string): Promise<Sighting[]>;
+    listAll(): Promise<Sighting[]>;
     create(input: SightingInput): Promise<Sighting>;
     remove(id: string): Promise<void>;
   };
 
   harvests: {
     list(speciesId: string): Promise<Harvest[]>;
+    listAll(): Promise<Harvest[]>;
     create(input: HarvestInput): Promise<Harvest>;
     remove(id: string): Promise<void>;
   };
 
   preparations: {
     list(speciesId: string): Promise<Preparation[]>;
+    listAll(): Promise<Preparation[]>;
     get(id: string): Promise<Preparation | undefined>;
     create(input: PreparationInput): Promise<Preparation>;
     update(id: string, patch: Partial<PreparationInput>): Promise<void>;
@@ -227,8 +267,21 @@ export interface DataStore {
     remove(id: string): Promise<void>;
   };
 
+  journal: {
+    list(): Promise<JournalEntry[]>;
+    get(id: string): Promise<JournalEntry | undefined>;
+    create(input: JournalEntryInput): Promise<JournalEntry>;
+    update(id: string, patch: Partial<JournalEntryInput>): Promise<void>;
+    remove(id: string): Promise<void>;
+  };
+
   userVocab: {
     list(vocabId: string): Promise<VocabTerm[]>;
     add(vocabId: string, term: VocabTerm): Promise<void>;
+  };
+
+  backup: {
+    exportAll(): Promise<BackupData>;
+    importAll(data: BackupData): Promise<void>;
   };
 }
