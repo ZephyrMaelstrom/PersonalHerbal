@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 import { chat, type ChatMessage } from '@/lib/ai/chat';
+import { ARCHDRUID_PERSONA } from '@/lib/ai/persona';
 import type { Species } from '@/lib/storage';
 import { useSettings } from '@/features/settings/hooks';
 import { useCurrentReference } from '@/features/reference/hooks';
@@ -31,8 +32,8 @@ export function AskDialog({ species }: { species: Species }) {
   function systemPrompt(): string {
     const ref = current ? asReferenceContent(current.content) : null;
     const parts = [
-      `You are a careful, knowledgeable herbalist and botanist answering a practitioner's questions about ${species.scientificName}${species.commonNames.length ? ` (${species.commonNames.join(', ')})` : ''}.`,
-      'Be accurate and concise. Flag uncertainty honestly, note relevant safety, contraindications, and drug interactions, and remind that this is reference information, not medical advice.',
+      ARCHDRUID_PERSONA,
+      `Right now the practitioner is asking about ${species.scientificName}${species.commonNames.length ? ` (${species.commonNames.join(', ')})` : ''}. Center your teaching on this plant.`,
     ];
     if (settings?.region.trim()) parts.push(`The practitioner's region is ${settings.region.trim()}.`);
     if (ref) {
@@ -40,7 +41,7 @@ export function AskDialog({ species }: { species: Species }) {
         `For context, here is the saved reference summary (you may go beyond it): ${ref.summary} Edibility: ${ref.edibility}. Contraindications: ${ref.contraindications.join('; ') || 'none recorded'}.`,
       );
     }
-    return parts.join('\n');
+    return parts.join('\n\n');
   }
 
   async function send() {
@@ -70,7 +71,7 @@ export function AskDialog({ species }: { species: Species }) {
       </DialogTrigger>
       <DialogContent className="flex max-h-[85vh] flex-col">
         <DialogHeader>
-          <DialogTitle>Ask about {species.scientificName}</DialogTitle>
+          <DialogTitle>Ask the ArchDruid · {species.scientificName}</DialogTitle>
         </DialogHeader>
 
         {!hasKey ? (
@@ -79,14 +80,14 @@ export function AskDialog({ species }: { species: Species }) {
             <Link to="/settings" className="text-primary underline" onClick={() => setOpen(false)}>
               Settings
             </Link>{' '}
-            to ask questions.
+            to consult the ArchDruid.
           </p>
         ) : (
           <>
             <div className="min-h-0 flex-1 space-y-3 overflow-y-auto pr-1">
               {messages.length === 0 && (
                 <p className="text-sm text-muted-foreground">
-                  Ask anything — identification, preparations, dosing considerations, look-alikes, safety…
+                  Ask the ArchDruid anything — identification, preparations, dosing considerations, look-alikes, history, safety…
                 </p>
               )}
               {messages.map((m, i) => (

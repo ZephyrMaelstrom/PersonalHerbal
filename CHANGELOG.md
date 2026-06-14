@@ -1,5 +1,13 @@
 # Changelog
 
+## Phase 5e — The ArchDruid persona
+
+- The conversational AI is now **the ArchDruid**: an extremely knowledgeable, eager-to-teach
+  companion who explains the "why", defines jargon, and proactively flags safety — while
+  keeping accuracy, uncertainty, and not-medical-advice guardrails intact.
+- Shared persona in `src/lib/ai/persona.ts`, used by both "Ask the ArchDruid" (per species)
+  and the ArchDruid companion screen. The structured reference monograph stays objective.
+
 ## Phase 5d — AI companion (engagement drop 4)
 
 ### Added

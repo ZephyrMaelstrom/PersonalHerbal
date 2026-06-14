@@ -5,15 +5,15 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { chat } from '@/lib/ai/chat';
+import { ARCHDRUID_PERSONA } from '@/lib/ai/persona';
 import { labelFor } from '@/lib/vocab';
 import { isInSeason } from '@/lib/season';
 import { useSpeciesList } from '@/features/species/hooks';
 import { useSettings } from '@/features/settings/hooks';
 
-const SYSTEM =
-  'You are a seasoned herbalist companion for a single practitioner. Be concrete, concise, and practical. ' +
-  'Suggest things grounded in the collection and season provided. Always flag safety, contraindications, and ' +
-  'look-alike risks where relevant. This is reference guidance, not medical advice.';
+const SYSTEM = `${ARCHDRUID_PERSONA}
+
+Here you are advising on the practitioner's whole collection and the current season. Ground every suggestion in the collection and season provided, and turn each into a small teaching moment — say not just what to do but why. Keep it well-organized and practical.`;
 
 export function CompanionScreen() {
   const { data: settings } = useSettings();
@@ -68,12 +68,15 @@ export function CompanionScreen() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-2xl font-semibold tracking-tight">Herbalist companion</h1>
+      <div>
+        <h1 className="text-2xl font-semibold tracking-tight">The ArchDruid</h1>
+        <p className="text-sm text-muted-foreground">Your knowledgeable companion in plants & medicine.</p>
+      </div>
 
       {!hasKey ? (
         <Card>
           <CardContent className="space-y-3 py-8 text-center">
-            <p className="text-sm text-muted-foreground">Add your AI key to use the companion.</p>
+            <p className="text-sm text-muted-foreground">Add your AI key to consult the ArchDruid.</p>
             <Button asChild variant="outline">
               <Link to="/settings">Open Settings</Link>
             </Button>
@@ -96,7 +99,7 @@ export function CompanionScreen() {
               if (custom.trim()) run(custom.trim());
             }}
           >
-            <Input value={custom} onChange={(e) => setCustom(e.target.value)} placeholder="Or ask your own…" disabled={busy} />
+            <Input value={custom} onChange={(e) => setCustom(e.target.value)} placeholder="Ask the ArchDruid your own…" disabled={busy} />
             <Button type="submit" disabled={busy || !custom.trim()}>
               <Sparkles /> Ask
             </Button>

@@ -206,8 +206,8 @@ export function TodayScreen() {
           <CardContent className="flex items-center gap-3 p-3.5">
             <Sparkles className="size-5 shrink-0 text-primary" />
             <div className="flex-1">
-              <p className="text-sm font-medium">Herbalist companion</p>
-              <p className="text-xs text-muted-foreground">Seasonal suggestions, what to make, safety review</p>
+              <p className="text-sm font-medium">Consult the ArchDruid</p>
+              <p className="text-xs text-muted-foreground">Your teacher in plants & medicine — ask anything</p>
             </div>
           </CardContent>
         </Card>
