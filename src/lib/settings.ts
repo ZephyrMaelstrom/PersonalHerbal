@@ -20,6 +20,14 @@ export interface AppSettings {
   textScale: 'normal' | 'large';
   /** Opt-in local reminders for due preparations etc. */
   notifications: boolean;
+  /** Optional off-device backup. Uses the user's own cloud — no app server. */
+  cloudProvider: 'none' | 'gdrive';
+  /** Google OAuth Client ID (the user creates this in Google Cloud Console). */
+  gdriveClientId: string;
+  /** Automatically back up on app open when stale. */
+  cloudAuto: boolean;
+  /** ISO timestamp of the last successful cloud backup. */
+  lastCloudBackupAt?: string;
 }
 
 export const AI_MODELS = [
@@ -39,6 +47,9 @@ const DEFAULTS: AppSettings = {
   theme: 'forest',
   textScale: 'normal',
   notifications: false,
+  cloudProvider: 'none',
+  gdriveClientId: '',
+  cloudAuto: false,
 };
 
 export function loadSettings(): AppSettings {

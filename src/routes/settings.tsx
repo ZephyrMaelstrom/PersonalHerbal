@@ -16,6 +16,7 @@ import { AI_MODELS, type AppSettings } from '@/lib/settings';
 import type { BackupData, SnapshotMeta } from '@/lib/storage';
 import { useInstallPrompt } from '@/lib/pwa';
 import {
+  useCloudBackup,
   useExportBackup,
   useImportBackup,
   useRestoreSnapshot,
@@ -51,7 +52,15 @@ export function SettingsScreen() {
   const { data: currentSpecies = [] } = useSpeciesList();
   const { data: snapshots = [] } = useSnapshots();
   const restoreSnapshot = useRestoreSnapshot();
+  const cloudBackup = useCloudBackup();
   const { toast } = useToast();
+
+  function backupToCloud() {
+    cloudBackup.mutate(true, {
+      onSuccess: () => toast({ message: 'Backed up to Google Drive' }),
+      onError: (err) => toast({ message: err instanceof Error ? err.message : 'Cloud backup failed' }),
+    });
+  }
   const [pendingRestore, setPendingRestore] = useState<SnapshotMeta | null>(null);
 
   const [exporting, setExporting] = useState<string>();
@@ -233,6 +242,57 @@ export function SettingsScreen() {
             </Choice>
           </div>
         </Field>
+      </section>
+
+      <section className="space-y-4">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Cloud backup</h2>
+        <p className="text-xs text-muted-foreground">
+          Off-device backup to your own Google Drive (no app server). Requires a Google OAuth Client ID (Web) with this
+          site as an authorized origin — create one in Google Cloud Console. Save settings, then “Back up now” once to
+          grant access; after that, auto-backup can run silently.
+        </p>
+        <Field label="Provider">
+          <div className="flex gap-2">
+            <Choice active={form.cloudProvider === 'none'} onClick={() => set('cloudProvider', 'none')}>
+              None
+            </Choice>
+            <Choice active={form.cloudProvider === 'gdrive'} onClick={() => set('cloudProvider', 'gdrive')}>
+              Google Drive
+            </Choice>
+          </div>
+        </Field>
+        {form.cloudProvider === 'gdrive' && (
+          <>
+            <Field label="Google OAuth Client ID" htmlFor="gcid">
+              <Input
+                id="gcid"
+                value={form.gdriveClientId}
+                onChange={(e) => set('gdriveClientId', e.target.value)}
+                placeholder="…apps.googleusercontent.com"
+                autoCapitalize="off"
+                autoCorrect="off"
+              />
+            </Field>
+            <Field label="Auto-backup" hint="Silently back up once a day when you open the app (after first consent).">
+              <div className="flex gap-2">
+                <Choice active={form.cloudAuto} onClick={() => set('cloudAuto', true)}>
+                  On
+                </Choice>
+                <Choice active={!form.cloudAuto} onClick={() => set('cloudAuto', false)}>
+                  Off
+                </Choice>
+              </div>
+            </Field>
+            <div className="flex items-center gap-3">
+              <Button variant="outline" disabled={cloudBackup.isPending} onClick={backupToCloud}>
+                {cloudBackup.isPending ? 'Backing up…' : 'Back up now'}
+              </Button>
+              {data?.lastCloudBackupAt && (
+                <span className="text-xs text-muted-foreground">Last: {new Date(data.lastCloudBackupAt).toLocaleString()}</span>
+              )}
+            </div>
+          </>
+        )}
       </section>
 
       <div className="flex items-center gap-3">

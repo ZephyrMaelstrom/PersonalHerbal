@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils';
 import { useOnline } from '@/lib/pwa';
 import { ReloadPrompt } from '@/components/layout/ReloadPrompt';
 import { applyAppearance } from '@/lib/appearance';
-import { useSettings } from '@/features/settings/hooks';
+import { useCloudAutoBackup, useSettings } from '@/features/settings/hooks';
 import { useAchievementsWatcher } from '@/features/progress/hooks';
 import { useReminders } from '@/features/reminders/hooks';
 
@@ -23,6 +23,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const { data: settings } = useSettings();
   useAchievementsWatcher(settings?.gamification ?? false);
   useReminders(settings?.notifications ?? false);
+  useCloudAutoBackup();
 
   useEffect(() => {
     if (settings) applyAppearance(settings);

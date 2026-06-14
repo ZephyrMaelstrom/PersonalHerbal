@@ -1,6 +1,18 @@
+import { useEffect, useRef } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { getStore, type BackupData } from '@/lib/storage';
 import { loadSettings, saveSettings, type AppSettings } from '@/lib/settings';
+import { gdriveBackup } from '@/lib/cloud/gdrive';
+
+const AUTO_BACKUP_INTERVAL_MS = 20 * 60 * 60 * 1000; // ~daily
+
+async function buildBackupBlob(): Promise<{ blob: Blob; filename: string }> {
+  const data = await getStore().backup.exportAll();
+  return {
+    blob: new Blob([JSON.stringify(data)], { type: 'application/json' }),
+    filename: `verdant-codex-backup-${new Date().toISOString().slice(0, 10)}.json`,
+  };
+}
 
 export function useSettings() {
   return useQuery({ queryKey: ['settings'], queryFn: async () => loadSettings() });
@@ -32,6 +44,46 @@ export function useExportBackup() {
       return data;
     },
   });
+}
+
+/** Manual cloud backup (interactive consent if needed). */
+export function useCloudBackup() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (interactive: boolean) => {
+      const s = loadSettings();
+      if (s.cloudProvider !== 'gdrive') throw new Error('Choose a cloud provider in Settings.');
+      const { blob, filename } = await buildBackupBlob();
+      await gdriveBackup(s.gdriveClientId, blob, filename, interactive);
+      saveSettings({ ...loadSettings(), lastCloudBackupAt: new Date().toISOString() });
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['settings'] }),
+  });
+}
+
+/** Silent cloud backup on app open when enabled, configured, online, and stale. */
+export function useCloudAutoBackup() {
+  const qc = useQueryClient();
+  const ran = useRef(false);
+  useEffect(() => {
+    if (ran.current) return;
+    ran.current = true;
+    void (async () => {
+      const s = loadSettings();
+      if (!s.cloudAuto || s.cloudProvider !== 'gdrive' || !s.gdriveClientId.trim()) return;
+      if (typeof navigator !== 'undefined' && !navigator.onLine) return;
+      const last = s.lastCloudBackupAt ? Date.parse(s.lastCloudBackupAt) : 0;
+      if (Date.now() - last < AUTO_BACKUP_INTERVAL_MS) return;
+      try {
+        const { blob, filename } = await buildBackupBlob();
+        await gdriveBackup(s.gdriveClientId, blob, filename, false);
+        saveSettings({ ...loadSettings(), lastCloudBackupAt: new Date().toISOString() });
+        qc.invalidateQueries({ queryKey: ['settings'] });
+      } catch {
+        // Silent: typically means consent is needed — the user can run a manual backup once.
+      }
+    })();
+  }, [qc]);
 }
 
 /** On-device automatic restore points. */

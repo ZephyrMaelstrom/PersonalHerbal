@@ -1,5 +1,13 @@
 # Changelog
 
+## Phase 8b — Automatic cloud backup
+
+- **Google Drive backup** (Settings → Cloud backup): off-device backups to the user's own
+  Drive via Google Identity Services + the narrow `drive.file` scope — entirely client-side,
+  no app server. Manual **Back up now** and a silent **auto-backup** on app open (~daily,
+  after first consent), with last-backup time shown.
+- Pluggable cloud layer (`src/lib/cloud/`) so other providers can be added later.
+
 ## Phase 8a — Traceability & phenology
 
 ### Added
