@@ -28,6 +28,14 @@ export function useAddPhoto(speciesId: string) {
   });
 }
 
+export function useUpdatePhoto(speciesId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, caption }: { id: string; caption: string }) => store.photos.update(id, { caption }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['photos', speciesId] }),
+  });
+}
+
 export function useDeletePhoto(speciesId: string) {
   const qc = useQueryClient();
   return useMutation({

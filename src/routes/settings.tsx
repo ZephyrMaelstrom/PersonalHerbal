@@ -25,8 +25,8 @@ import {
   useSnapshots,
 } from '@/features/settings/hooks';
 import { useSpeciesList } from '@/features/species/hooks';
-import { COLLECTION_FORMATS } from '@/lib/export/collection';
-import { deliver } from '@/lib/export/share';
+import { COLLECTION_FORMATS, buildFieldGuideHtml } from '@/lib/export/collection';
+import { deliver, printHtml } from '@/lib/export/share';
 
 function Choice({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
   return (
@@ -339,6 +339,9 @@ export function SettingsScreen() {
               <Download /> {exporting === f.id ? 'Preparing…' : f.label}
             </Button>
           ))}
+          <Button variant="outline" size="sm" onClick={async () => printHtml(await buildFieldGuideHtml())}>
+            <Download /> Print field guide
+          </Button>
         </div>
       </section>
 

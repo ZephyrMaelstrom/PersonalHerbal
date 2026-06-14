@@ -155,6 +155,8 @@ export interface Photo {
   /** Set when the photo was captured during an "Add sighting" flow. */
   sightingId?: string;
   blob: Blob;
+  /** Small thumbnail for fast grids (optional; falls back to blob). */
+  thumb?: Blob;
   mime: string;
   caption?: string;
   createdAt: string;
@@ -222,8 +224,8 @@ export interface SnapshotMeta {
   photoCount: number;
 }
 
-/** A photo serialized for backup (Blob → base64). */
-export type BackupPhoto = Omit<Photo, 'blob'> & { dataBase64: string };
+/** A photo serialized for backup (Blob → base64; thumbnails regenerate, so not stored). */
+export type BackupPhoto = Omit<Photo, 'blob' | 'thumb'> & { dataBase64: string };
 /** A voice memo serialized for backup (Blob → base64). */
 export type BackupAudio = Omit<AudioNote, 'blob'> & { dataBase64: string };
 
@@ -338,6 +340,7 @@ export interface DataStore {
     listForSpecies(speciesId: string): Promise<Photo[]>;
     get(id: string): Promise<Photo | undefined>;
     add(input: PhotoInput): Promise<Photo>;
+    update(id: string, patch: Partial<Pick<Photo, 'caption'>>): Promise<void>;
     remove(id: string): Promise<void>;
   };
 

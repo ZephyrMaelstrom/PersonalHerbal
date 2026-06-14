@@ -12,7 +12,7 @@ import { getStore } from '@/lib/storage';
 import { EMPTY_SPECIES } from '@/features/species/SpeciesForm';
 import { PhotoCapture } from '@/features/photos/PhotoCapture';
 import { PhotoImg } from '@/features/photos/PhotoImg';
-import { processImage } from '@/features/photos/image';
+import { makeThumb, processImage } from '@/features/photos/image';
 import { readPhotoMeta } from '@/features/photos/exif';
 import { LocationPicker, type LocationValue } from '@/features/places/LocationPicker';
 import { SpeciesPicker } from '@/features/capture/SpeciesPicker';
@@ -76,7 +76,8 @@ export function CaptureScreen() {
       let firstPhotoId: string | undefined;
       for (const f of files) {
         const { blob, mime } = await processImage(f);
-        const photo = await store.photos.add({ speciesId, sightingId: sighting.id, blob, mime });
+        const thumb = await makeThumb(blob);
+        const photo = await store.photos.add({ speciesId, sightingId: sighting.id, blob, thumb, mime });
         firstPhotoId ??= photo.id;
       }
       if (firstPhotoId) {

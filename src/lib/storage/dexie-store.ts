@@ -156,7 +156,7 @@ export function createDexieStore(): DataStore {
         db.audio.toArray(),
       ]);
     const photos: BackupPhoto[] = await Promise.all(
-      photoRows.map(async ({ blob, ...rest }) => ({ ...rest, dataBase64: await blobToBase64(blob) })),
+      photoRows.map(async ({ blob, thumb: _thumb, ...rest }) => ({ ...rest, dataBase64: await blobToBase64(blob) })),
     );
     const audio: BackupAudio[] = await Promise.all(
       audioRows.map(async ({ blob, ...rest }) => ({ ...rest, dataBase64: await blobToBase64(blob) })),
@@ -413,6 +413,9 @@ export function createDexieStore(): DataStore {
         const record: Photo = { ...input, id: uid(), createdAt: new Date().toISOString() };
         await db.photos.add(record);
         return record;
+      },
+      async update(id, patch) {
+        await db.photos.update(id, patch);
       },
       remove: (id) => db.photos.delete(id),
     },

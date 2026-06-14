@@ -20,7 +20,7 @@ export function SpeciesPhotoThumb({
       )}
     >
       {photo ? (
-        <PhotoImg blob={photo.blob} className="h-full w-full object-cover" />
+        <PhotoImg blob={photo.thumb ?? photo.blob} className="h-full w-full object-cover" />
       ) : (
         <Leaf className="size-1/2 text-muted-foreground/50" />
       )}

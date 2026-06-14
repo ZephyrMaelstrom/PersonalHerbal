@@ -10,7 +10,7 @@ import { EnumSelect } from '@/components/inputs/EnumSelect';
 import { useToast } from '@/components/ui/toast';
 import { PhotoCapture } from '@/features/photos/PhotoCapture';
 import { PhotoImg } from '@/features/photos/PhotoImg';
-import { processImage } from '@/features/photos/image';
+import { makeThumb, processImage } from '@/features/photos/image';
 import { readPhotoMeta } from '@/features/photos/exif';
 import { useAddPhoto, useSpeciesPhotos } from '@/features/photos/hooks';
 import { LocationPicker, type LocationValue } from '@/features/places/LocationPicker';
@@ -74,7 +74,8 @@ export function SightingsTab({ speciesId }: { speciesId: string }) {
       let photoId: string | undefined;
       if (file) {
         const { blob, mime } = await processImage(file);
-        const photo = await addPhoto.mutateAsync({ speciesId, blob, mime });
+        const thumb = await makeThumb(blob);
+        const photo = await addPhoto.mutateAsync({ speciesId, blob, thumb, mime });
         photoId = photo.id;
       }
       await create.mutateAsync({
@@ -170,7 +171,7 @@ export function SightingsTab({ speciesId }: { speciesId: string }) {
               <Card key={s.id}>
                 <CardContent className="flex gap-3 p-3">
                   {photo && (
-                    <PhotoImg blob={photo.blob} className="size-16 shrink-0 rounded-md object-cover" />
+                    <PhotoImg blob={photo.thumb ?? photo.blob} className="size-16 shrink-0 rounded-md object-cover" />
                   )}
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">

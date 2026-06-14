@@ -1,5 +1,24 @@
 # Changelog
 
+## Phase 8c — Polish, scale & reach
+
+### Added
+- **Thumbnails** — photos now store a small thumbnail; grids, species cards, and sighting
+  rows render the thumbnail instead of decoding full images, so lists stay fast as the
+  collection grows. (Thumbnails regenerate and aren't stored in backups, keeping them small.)
+- **Field guide** — a printable multi-species guide (Settings → Export → **Print field
+  guide**, or download as HTML) combining attributes with reference summaries.
+- **Calendar (.ics) export** — preparation ready-dates as events you can import into your
+  phone calendar.
+- **Photo experience** — per-photo **captions** and **Open full size** (native pinch-zoom in
+  a new tab) in the photo viewer.
+
+### Deferred (need on-device verification / are lower-value)
+- **List virtualization** — thumbnails address the main cost; windowed scrolling needs
+  real-device scroll testing, so it's held back rather than risk the Species screen.
+- **Photo reorder & annotation** — main-photo selection covers ordering for now; freehand
+  annotation is a larger lift.
+
 ## Phase 8b — Automatic cloud backup
 
 - **Google Drive backup** (Settings → Cloud backup): off-device backups to the user's own

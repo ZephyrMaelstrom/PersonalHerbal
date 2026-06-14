@@ -1,8 +1,9 @@
-import { useState } from 'react';
-import { Star, Trash2 } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { ExternalLink, Star, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import {
   Dialog,
   DialogClose,
@@ -16,8 +17,8 @@ import type { Photo } from '@/lib/storage';
 import { useSpecies, useUpdateSpecies } from '@/features/species/hooks';
 import { PhotoImg } from './PhotoImg';
 import { PhotoCapture } from './PhotoCapture';
-import { processImage } from './image';
-import { useAddPhoto, useDeletePhoto, useSpeciesPhotos } from './hooks';
+import { makeThumb, processImage } from './image';
+import { useAddPhoto, useDeletePhoto, useSpeciesPhotos, useUpdatePhoto } from './hooks';
 
 export function PhotosTab({ speciesId }: { speciesId: string }) {
   const { data: photos = [], isLoading } = useSpeciesPhotos(speciesId);
@@ -25,9 +26,19 @@ export function PhotosTab({ speciesId }: { speciesId: string }) {
   const updateSpecies = useUpdateSpecies(speciesId);
   const add = useAddPhoto(speciesId);
   const del = useDeletePhoto(speciesId);
+  const updatePhoto = useUpdatePhoto(speciesId);
   const { toast } = useToast();
   const [active, setActive] = useState<Photo | null>(null);
+  const [caption, setCaption] = useState('');
   const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    setCaption(active?.caption ?? '');
+  }, [active]);
+
+  function openFull(photo: Photo) {
+    window.open(URL.createObjectURL(photo.blob), '_blank');
+  }
 
   const mainPhotoId = species?.mainPhotoId;
 
@@ -37,7 +48,8 @@ export function PhotosTab({ speciesId }: { speciesId: string }) {
       let firstAddedId: string | undefined;
       for (const file of files) {
         const { blob, mime } = await processImage(file);
-        const photo = await add.mutateAsync({ speciesId, blob, mime });
+        const thumb = await makeThumb(blob);
+        const photo = await add.mutateAsync({ speciesId, blob, thumb, mime });
         firstAddedId ??= photo.id;
       }
       // The first photo a species gets becomes its main photo automatically.
@@ -68,6 +80,7 @@ export function PhotosTab({ speciesId }: { speciesId: string }) {
         const restored = await add.mutateAsync({
           speciesId,
           blob: photo.blob,
+          thumb: photo.thumb,
           mime: photo.mime,
           caption: photo.caption,
           sightingId: photo.sightingId,
@@ -102,7 +115,7 @@ export function PhotosTab({ speciesId }: { speciesId: string }) {
                 p.id === mainPhotoId && 'ring-2 ring-primary',
               )}
             >
-              <PhotoImg blob={p.blob} className="h-full w-full object-cover" />
+              <PhotoImg blob={p.thumb ?? p.blob} className="h-full w-full object-cover" />
               {p.id === mainPhotoId && (
                 <span className="absolute left-1 top-1 rounded-full bg-background/90 p-1">
                   <Star className="size-3 fill-primary text-primary" />
@@ -119,6 +132,17 @@ export function PhotosTab({ speciesId }: { speciesId: string }) {
             <DialogTitle>Photo</DialogTitle>
           </DialogHeader>
           {active && <PhotoImg blob={active.blob} className="max-h-[55vh] w-full rounded-md object-contain" />}
+          <div className="flex gap-2">
+            <Input
+              value={caption}
+              onChange={(e) => setCaption(e.target.value)}
+              placeholder="Add a caption…"
+              onBlur={() => active && caption !== (active.caption ?? '') && updatePhoto.mutate({ id: active.id, caption })}
+            />
+            <Button variant="outline" size="icon" aria-label="Open full size" onClick={() => active && openFull(active)}>
+              <ExternalLink />
+            </Button>
+          </div>
           <div className="flex flex-wrap items-center justify-between gap-2">
             {active && active.id === mainPhotoId ? (
               <Badge>
