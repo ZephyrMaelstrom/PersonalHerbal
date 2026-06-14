@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Link } from '@tanstack/react-router';
+import { Link, useSearch } from '@tanstack/react-router';
 import { LayoutGrid, Leaf, List, Plus, SlidersHorizontal, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,15 +14,18 @@ import { labelFor } from '@/lib/vocab';
 
 export function SpeciesListScreen() {
   const { data: species = [], isLoading } = useSpeciesList();
+  const params = useSearch({ from: '/species' });
   const [search, setSearch] = useState('');
-  const [showFilters, setShowFilters] = useState(false);
   const [view, setView] = useState<'list' | 'grid'>('list');
-  const [edibility, setEdibility] = useState<string>();
-  const [nativeStatus, setNativeStatus] = useState<string>();
-  const [actions, setActions] = useState<string[]>([]);
-  const [habitats, setHabitats] = useState<string[]>([]);
-  const [safetyFlags, setSafetyFlags] = useState<string[]>([]);
-  const [seasons, setSeasons] = useState<string[]>([]);
+  const [edibility, setEdibility] = useState<string | undefined>(params.edibility);
+  const [nativeStatus, setNativeStatus] = useState<string | undefined>(params.nativeStatus);
+  const [actions, setActions] = useState<string[]>(params.action ? [params.action] : []);
+  const [habitats, setHabitats] = useState<string[]>(params.habitat ? [params.habitat] : []);
+  const [safetyFlags, setSafetyFlags] = useState<string[]>(params.safetyFlag ? [params.safetyFlag] : []);
+  const [seasons, setSeasons] = useState<string[]>(params.season ? [params.season] : []);
+  const [showFilters, setShowFilters] = useState(
+    !!(params.edibility || params.nativeStatus || params.action || params.habitat || params.safetyFlag || params.season),
+  );
 
   const activeFilterCount =
     (edibility ? 1 : 0) +

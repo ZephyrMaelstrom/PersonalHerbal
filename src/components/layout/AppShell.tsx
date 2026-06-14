@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { Link, useRouterState } from '@tanstack/react-router';
-import { CalendarDays, Camera, Home, Leaf, NotebookPen, Settings, WifiOff } from 'lucide-react';
+import { CalendarDays, Camera, Home, Leaf, NotebookPen, Search, Settings, WifiOff } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useOnline } from '@/lib/pwa';
 import { ReloadPrompt } from '@/components/layout/ReloadPrompt';
@@ -28,10 +28,13 @@ export function AppShell({ children }: { children: ReactNode }) {
         <Leaf className="size-5 text-primary" />
         <span className="font-semibold tracking-tight">Verdant Codex</span>
         {!online && (
-          <span className="ml-auto flex items-center gap-1 text-xs text-muted-foreground">
+          <span className="flex items-center gap-1 text-xs text-muted-foreground">
             <WifiOff className="size-3.5" /> Offline
           </span>
         )}
+        <Link to="/search" aria-label="Search" className="ml-auto text-muted-foreground">
+          <Search className="size-5" />
+        </Link>
       </header>
 
       <main className="flex-1 px-4 py-4 pb-24">{children}</main>

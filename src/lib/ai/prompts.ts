@@ -1,5 +1,6 @@
 import type { Species } from '@/lib/storage';
 import { labelFor } from '@/lib/vocab';
+import type { ReferenceContent } from './schema';
 
 /** Prompt templates the user can pick from on the generate screen. */
 export const PROMPT_TEMPLATES = [
@@ -53,6 +54,8 @@ export interface BuildUserPromptArgs {
   templateCode: string;
   citationDepth: number;
   includeAttributes: boolean;
+  /** When set, improve this existing reference (fill gaps, add citations) instead of starting fresh. */
+  improveFrom?: ReferenceContent;
 }
 
 export function buildUserPrompt({
@@ -61,6 +64,7 @@ export function buildUserPrompt({
   templateCode,
   citationDepth,
   includeAttributes,
+  improveFrom,
 }: BuildUserPromptArgs): string {
   const tmpl = PROMPT_TEMPLATES.find((t) => t.code === templateCode) ?? PROMPT_TEMPLATES[0];
   const lines: string[] = [];
@@ -71,6 +75,12 @@ export function buildUserPrompt({
   if (region.trim()) lines.push(`Region of interest: ${region.trim()} — tailor habitat, range, and harvest timing to this region where relevant.`);
   lines.push(`Emphasis: focus on ${tmpl.emphasis}.`);
   lines.push(`Aim for roughly ${citationDepth} citation(s) if reliable sources exist (fewer is fine; never fabricate).`);
+
+  if (improveFrom) {
+    lines.push(
+      `Improve the existing reference below rather than starting from scratch: fill in empty or thin fields, correct anything inaccurate, and add reliable citations where you are confident (never fabricate sources). Preserve accurate existing content. Return the full improved JSON object.\n\nCurrent reference:\n${JSON.stringify(improveFrom)}`,
+    );
+  }
 
   if (includeAttributes) {
     // Spec: send only structured attributes the user has recorded — never free-text notes

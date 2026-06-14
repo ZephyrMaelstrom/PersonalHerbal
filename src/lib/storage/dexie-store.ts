@@ -254,6 +254,7 @@ export function createDexieStore(): DataStore {
 
     notes: {
       get: (speciesId) => db.notes.get(speciesId),
+      listAll: () => db.notes.toArray(),
       async upsert(notes: SpeciesNotes) {
         await db.notes.put({ ...notes, updatedAt: new Date().toISOString() });
       },
@@ -265,6 +266,9 @@ export function createDexieStore(): DataStore {
       async current(speciesId) {
         const versions = await db.reference.where('speciesId').equals(speciesId).toArray();
         return versions.find((v) => v.isCurrent);
+      },
+      async listCurrent() {
+        return (await db.reference.toArray()).filter((v) => v.isCurrent);
       },
       async create(input: SpeciesReferenceInput) {
         const existing = await db.reference.where('speciesId').equals(input.speciesId).toArray();

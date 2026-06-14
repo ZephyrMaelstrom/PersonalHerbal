@@ -20,6 +20,7 @@ import { CaptureScreen } from '@/routes/capture';
 import { FindsMapScreen } from '@/routes/map';
 import { ProgressScreen } from '@/routes/progress';
 import { CompanionScreen } from '@/routes/companion';
+import { SearchScreen } from '@/routes/search';
 
 const rootRoute = createRootRoute({
   component: () => (
@@ -30,7 +31,29 @@ const rootRoute = createRootRoute({
 });
 
 const indexRoute = createRoute({ getParentRoute: () => rootRoute, path: '/', component: TodayScreen });
-const speciesListRoute = createRoute({ getParentRoute: () => rootRoute, path: '/species', component: SpeciesListScreen });
+/** Search params let attribute chips deep-link into a pre-filtered species list. */
+export interface SpeciesSearch {
+  edibility?: string;
+  nativeStatus?: string;
+  action?: string;
+  habitat?: string;
+  safetyFlag?: string;
+  season?: string;
+}
+const str = (v: unknown): string | undefined => (typeof v === 'string' && v ? v : undefined);
+const speciesListRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/species',
+  component: SpeciesListScreen,
+  validateSearch: (s: Record<string, unknown>): SpeciesSearch => ({
+    edibility: str(s.edibility),
+    nativeStatus: str(s.nativeStatus),
+    action: str(s.action),
+    habitat: str(s.habitat),
+    safetyFlag: str(s.safetyFlag),
+    season: str(s.season),
+  }),
+});
 const speciesNewRoute = createRoute({ getParentRoute: () => rootRoute, path: '/species/new', component: SpeciesNewScreen });
 const speciesDetailRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -46,6 +69,9 @@ const referenceGenerateRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/species/$speciesId/reference',
   component: ReferenceGenerateScreen,
+  validateSearch: (s: Record<string, unknown>): { improve?: boolean } => ({
+    improve: s.improve === true || s.improve === 'true',
+  }),
 });
 const settingsRoute = createRoute({ getParentRoute: () => rootRoute, path: '/settings', component: SettingsScreen });
 const journalRoute = createRoute({ getParentRoute: () => rootRoute, path: '/journal', component: JournalScreen });
@@ -55,6 +81,7 @@ const captureRoute = createRoute({ getParentRoute: () => rootRoute, path: '/capt
 const mapRoute = createRoute({ getParentRoute: () => rootRoute, path: '/map', component: FindsMapScreen });
 const progressRoute = createRoute({ getParentRoute: () => rootRoute, path: '/progress', component: ProgressScreen });
 const companionRoute = createRoute({ getParentRoute: () => rootRoute, path: '/companion', component: CompanionScreen });
+const searchRoute = createRoute({ getParentRoute: () => rootRoute, path: '/search', component: SearchScreen });
 
 const routeTree = rootRoute.addChildren([
   indexRoute,
@@ -71,6 +98,7 @@ const routeTree = rootRoute.addChildren([
   mapRoute,
   progressRoute,
   companionRoute,
+  searchRoute,
 ]);
 
 // Hash history keeps deep links and hard refreshes working on GitHub Pages (no server

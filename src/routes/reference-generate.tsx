@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate, useParams } from '@tanstack/react-router';
+import { Link, useNavigate, useParams, useSearch } from '@tanstack/react-router';
 import { AlertTriangle, ArrowLeft, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -63,11 +63,13 @@ export function ReferenceGenerateScreen() {
   const { data: current } = useCurrentReference(speciesId);
   const createRef = useCreateReference(speciesId);
 
+  const { improve } = useSearch({ from: '/species/$speciesId/reference' });
   const [model, setModel] = useState<string>();
   const [template, setTemplate] = useState('standard');
   const [region, setRegion] = useState<string>();
   const [citationDepth, setCitationDepth] = useState(5);
   const [includeAttributes, setIncludeAttributes] = useState(false);
+  const [improveMode, setImproveMode] = useState<boolean>(!!improve);
 
   const [phase, setPhase] = useState<'form' | 'generating' | 'preview'>('form');
   const [result, setResult] = useState<GenerateResult | null>(null);
@@ -84,12 +86,14 @@ export function ReferenceGenerateScreen() {
     setError(undefined);
     setPhase('generating');
     try {
+      const improveFrom = improveMode && current ? asReferenceContent(current.content) ?? undefined : undefined;
       const res = await generateReference(settings!, {
         species,
         region: effectiveRegion,
         templateCode: template,
         citationDepth,
         includeAttributes,
+        improveFrom,
       });
       setResult({ ...res, model: effectiveModel });
       setPhase('preview');
@@ -143,6 +147,19 @@ export function ReferenceGenerateScreen() {
 
       {phase !== 'preview' && (
         <div className="space-y-4">
+          {current && (
+            <Field label="Mode" hint="Improve keeps the current monograph and fills gaps, corrects, and adds sources.">
+              <div className="flex flex-wrap gap-2">
+                <Choice active={!improveMode} onClick={() => setImproveMode(false)}>
+                  Generate fresh
+                </Choice>
+                <Choice active={improveMode} onClick={() => setImproveMode(true)}>
+                  Improve current (find sources)
+                </Choice>
+              </div>
+            </Field>
+          )}
+
           <Field label="Model">
             <div className="flex flex-wrap gap-2">
               {AI_MODELS.map((m) => (

@@ -228,12 +228,15 @@ export interface DataStore {
 
   notes: {
     get(speciesId: string): Promise<SpeciesNotes | undefined>;
+    listAll(): Promise<SpeciesNotes[]>;
     upsert(notes: SpeciesNotes): Promise<void>;
   };
 
   reference: {
     listVersions(speciesId: string): Promise<SpeciesReference[]>;
     current(speciesId: string): Promise<SpeciesReference | undefined>;
+    /** All current reference versions across species (for search). */
+    listCurrent(): Promise<SpeciesReference[]>;
     /** Append a new immutable version and make it the current one. */
     create(input: SpeciesReferenceInput): Promise<SpeciesReference>;
     /** Promote an existing version to be the current one. */

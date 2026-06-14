@@ -47,11 +47,23 @@ export function SpeciesDetailScreen() {
     );
   }
 
-  const chips: Array<{ key: string; text: string; variant?: 'default' | 'secondary' | 'warning' }> = [];
+  // Linkable chips deep-link into a pre-filtered species list (materia-medica cross-linking).
+  type Chip = {
+    key: string;
+    text: string;
+    variant?: 'default' | 'secondary' | 'warning';
+    search?: Record<string, string>;
+  };
+  const chips: Chip[] = [];
   if (species.lifecycle) chips.push({ key: 'life', text: labelFor('lifecycle', species.lifecycle), variant: 'secondary' });
-  if (species.edibility) chips.push({ key: 'ed', text: labelFor('edibility', species.edibility) });
-  if (species.nativeStatus) chips.push({ key: 'ns', text: labelFor('native_status', species.nativeStatus), variant: 'secondary' });
-  for (const f of species.safetyFlags) chips.push({ key: `sf-${f}`, text: labelFor('safety_flag', f), variant: 'warning' });
+  if (species.edibility)
+    chips.push({ key: 'ed', text: labelFor('edibility', species.edibility), search: { edibility: species.edibility } });
+  if (species.nativeStatus)
+    chips.push({ key: 'ns', text: labelFor('native_status', species.nativeStatus), variant: 'secondary', search: { nativeStatus: species.nativeStatus } });
+  for (const f of species.safetyFlags)
+    chips.push({ key: `sf-${f}`, text: labelFor('safety_flag', f), variant: 'warning', search: { safetyFlag: f } });
+  for (const a of species.actions)
+    chips.push({ key: `ac-${a}`, text: labelFor('action', a), variant: 'secondary', search: { action: a } });
 
   return (
     <div className="space-y-4">
@@ -83,11 +95,17 @@ export function SpeciesDetailScreen() {
         </div>
         {chips.length > 0 && (
           <div className="flex flex-wrap gap-1.5 pt-1">
-            {chips.map((c) => (
-              <Badge key={c.key} variant={c.variant}>
-                {c.text}
-              </Badge>
-            ))}
+            {chips.map((c) =>
+              c.search ? (
+                <Link key={c.key} to="/species" search={c.search}>
+                  <Badge variant={c.variant}>{c.text}</Badge>
+                </Link>
+              ) : (
+                <Badge key={c.key} variant={c.variant}>
+                  {c.text}
+                </Badge>
+              ),
+            )}
           </div>
         )}
       </header>

@@ -1,5 +1,17 @@
 # Changelog
 
+## Phase 7b — Knowledge (search, cross-linking, reference enrichment)
+
+### Added
+- **Global search** (`/search`, header icon) across species, my-notes, journal entries, and
+  generated reference text, with type-tagged results that link to the source.
+- **Materia-medica cross-linking** — tappable attribute chips on a species (edibility, native
+  status, safety flags, herbal actions) deep-link into a pre-filtered species list via typed
+  URL search params.
+- **Reference enrichment** — an **Improve** mode on the reference generator (and an "Improve"
+  button on the Reference tab): the ArchDruid takes the current monograph and fills gaps,
+  corrects, and adds reliable citations, saved as a new immutable version.
+
 ## Phase 7a — Export & interoperability (CSV + outreach documents)
 
 Built on an extensible format registry (`src/lib/export/`) so new formats are a one-line add

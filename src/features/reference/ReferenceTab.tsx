@@ -20,7 +20,7 @@ export function ReferenceTab({ speciesId }: { speciesId: string }) {
           </p>
         </div>
         <Button asChild className="w-full">
-          <Link to="/species/$speciesId/reference" params={{ speciesId }}>
+          <Link to="/species/$speciesId/reference" params={{ speciesId }} search={{ improve: false }}>
             <Sparkles /> Generate reference page
           </Link>
         </Button>
@@ -46,11 +46,18 @@ export function ReferenceTab({ speciesId }: { speciesId: string }) {
           v{current.version} · {current.model} · {templateLabel(current.promptVersion.split(':')[1] ?? '')} ·{' '}
           {new Date(current.generatedAt).toLocaleDateString()}
         </span>
-        <Button asChild size="sm" variant="outline">
-          <Link to="/species/$speciesId/reference" params={{ speciesId }}>
-            <RefreshCw /> Regenerate
-          </Link>
-        </Button>
+        <div className="flex gap-2">
+          <Button asChild size="sm" variant="outline">
+            <Link to="/species/$speciesId/reference" params={{ speciesId }} search={{ improve: true }}>
+              <Sparkles /> Improve
+            </Link>
+          </Button>
+          <Button asChild size="sm" variant="outline">
+            <Link to="/species/$speciesId/reference" params={{ speciesId }} search={{ improve: false }}>
+              <RefreshCw /> Regenerate
+            </Link>
+          </Button>
+        </div>
       </div>
 
       {content ? (
