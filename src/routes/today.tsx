@@ -201,6 +201,18 @@ export function TodayScreen() {
         ))}
       </div>
 
+      <Link to="/companion">
+        <Card className="transition-colors hover:border-primary/50">
+          <CardContent className="flex items-center gap-3 p-3.5">
+            <Sparkles className="size-5 shrink-0 text-primary" />
+            <div className="flex-1">
+              <p className="text-sm font-medium">Herbalist companion</p>
+              <p className="text-xs text-muted-foreground">Seasonal suggestions, what to make, safety review</p>
+            </div>
+          </CardContent>
+        </Card>
+      </Link>
+
       {needsAttention.length > 0 && (
         <section className="space-y-2">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Needs attention</h2>

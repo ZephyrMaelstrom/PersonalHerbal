@@ -1,5 +1,16 @@
 # Changelog
 
+## Phase 5d — AI companion (engagement drop 4)
+
+### Added
+- **Ask about this plant** — a chat dialog on each species (header "Ask") that answers
+  questions with the plant + your saved reference + region as context.
+- **Herbalist companion** (`/companion`, linked from Today) — one-tap prompts ("what to
+  harvest now", "what can I make", "safety review") plus free-form questions, grounded in
+  your in-season plants, collection, and safety flags.
+- Both reuse the existing Anthropic/Claude setup and your local key; clearly labeled as
+  reference guidance, not medical advice.
+
 ## Phase 5c — Progress & rituals (engagement drop 3, opt-in)
 
 Off by default; enable under Settings → Progress & achievements.
