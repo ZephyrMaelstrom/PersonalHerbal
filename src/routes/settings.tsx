@@ -13,8 +13,10 @@ import {
 import { useToast } from '@/components/ui/toast';
 import { cn } from '@/lib/utils';
 import { AI_MODELS, type AppSettings } from '@/lib/settings';
+import type { BackupData } from '@/lib/storage';
 import { useInstallPrompt } from '@/lib/pwa';
 import { useExportBackup, useImportBackup, useSaveSettings, useSettings } from '@/features/settings/hooks';
+import { useSpeciesList } from '@/features/species/hooks';
 
 function Choice({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
   return (
@@ -37,29 +39,43 @@ export function SettingsScreen() {
   const exportBackup = useExportBackup();
   const importBackup = useImportBackup();
   const { canInstall, promptInstall } = useInstallPrompt();
+  const { data: currentSpecies = [] } = useSpeciesList();
   const { toast } = useToast();
   const fileRef = useRef<HTMLInputElement>(null);
-  const [pendingFile, setPendingFile] = useState<File | null>(null);
+  const [pending, setPending] = useState<{ data: BackupData; name: string } | null>(null);
   const [form, setForm] = useState<AppSettings | null>(null);
   const [showKey, setShowKey] = useState(false);
   const [savedAt, setSavedAt] = useState<string | null>(null);
 
-  function onPickFile(e: React.ChangeEvent<HTMLInputElement>) {
+  async function onPickFile(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0];
-    if (f) setPendingFile(f);
     e.target.value = '';
+    if (!f) return;
+    try {
+      const parsed = JSON.parse(await f.text()) as BackupData;
+      if (parsed.app !== 'verdant-codex' || !Array.isArray(parsed.species)) {
+        toast({ message: "That doesn't look like a Verdant Codex backup file." });
+        return;
+      }
+      setPending({ data: parsed, name: f.name });
+    } catch {
+      toast({ message: "Couldn't read that file as a backup." });
+    }
   }
 
-  async function confirmImport() {
-    if (!pendingFile) return;
-    try {
-      await importBackup.mutateAsync(pendingFile);
-      toast({ message: 'Backup restored' });
-    } catch (err) {
-      toast({ message: err instanceof Error ? err.message : 'Import failed' });
-    } finally {
-      setPendingFile(null);
-    }
+  function confirmImport() {
+    if (!pending) return;
+    importBackup.mutate(pending.data, {
+      onSuccess: (snapshot) => {
+        toast({
+          message: 'Data replaced from backup',
+          actionLabel: 'Undo',
+          onAction: () => importBackup.mutate(snapshot),
+        });
+        setPending(null);
+      },
+      onError: (err) => toast({ message: err instanceof Error ? err.message : 'Import failed' }),
+    });
   }
 
   useEffect(() => {
@@ -147,18 +163,23 @@ export function SettingsScreen() {
       <section className="space-y-3 border-t pt-5">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Backup &amp; restore</h2>
         <p className="text-xs text-muted-foreground">
-          Your data lives only on this device. Export a backup file to keep it safe or move to another phone. Importing
-          replaces everything currently on this device.
+          Your data lives only on this device. <strong>Export</strong> downloads a backup file to keep it safe.
+          <strong> Import</strong> replaces everything on this device with a file — it shows you what's in the file
+          first, and you can undo it.
         </p>
-        <div className="flex gap-2">
-          <Button variant="outline" disabled={exportBackup.isPending} onClick={() => exportBackup.mutate()}>
-            <Download /> {exportBackup.isPending ? 'Exporting…' : 'Export'}
-          </Button>
-          <Button variant="outline" disabled={importBackup.isPending} onClick={() => fileRef.current?.click()}>
-            <Upload /> Import
-          </Button>
-          <input ref={fileRef} type="file" accept="application/json,.json" hidden onChange={onPickFile} />
-        </div>
+        <Button className="w-full" disabled={exportBackup.isPending} onClick={() => exportBackup.mutate()}>
+          <Download /> {exportBackup.isPending ? 'Exporting…' : `Export backup (${currentSpecies.length} species)`}
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="text-muted-foreground"
+          disabled={importBackup.isPending}
+          onClick={() => fileRef.current?.click()}
+        >
+          <Upload /> Import / restore from a file
+        </Button>
+        <input ref={fileRef} type="file" accept="application/json,.json" hidden onChange={onPickFile} />
       </section>
 
       {canInstall && (
@@ -170,17 +191,36 @@ export function SettingsScreen() {
         </section>
       )}
 
-      <Dialog open={!!pendingFile} onOpenChange={(o) => !o && setPendingFile(null)}>
+      <Dialog open={!!pending} onOpenChange={(o) => !o && setPending(null)}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Replace all data?</DialogTitle>
             <DialogDescription>
-              Importing “{pendingFile?.name}” will overwrite every species, note, photo, and record currently on this
-              device. This cannot be undone.
+              This replaces everything on this device with the contents of “{pending?.name}”. You'll be able to undo it.
             </DialogDescription>
           </DialogHeader>
+          {pending && (
+            <div className="space-y-2 text-sm">
+              <div className="rounded-md border p-3">
+                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">The file contains</p>
+                <p>
+                  {pending.data.species.length} species · {pending.data.photos?.length ?? 0} photos ·{' '}
+                  {pending.data.sightings?.length ?? 0} sightings
+                </p>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                You currently have <strong>{currentSpecies.length}</strong> species on this device.
+              </p>
+              {pending.data.species.length === 0 && (
+                <p className="rounded-md border border-yellow-500/40 bg-yellow-500/10 p-2 text-xs text-yellow-300">
+                  ⚠ This file has no species. Importing it will leave you with an empty codex. Make sure this is the file
+                  you meant.
+                </p>
+              )}
+            </div>
+          )}
           <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={() => setPendingFile(null)}>
+            <Button variant="outline" onClick={() => setPending(null)}>
               Cancel
             </Button>
             <Button variant="destructive" onClick={confirmImport} disabled={importBackup.isPending}>

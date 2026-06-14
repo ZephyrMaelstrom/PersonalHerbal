@@ -34,14 +34,14 @@ export function useExportBackup() {
   });
 }
 
-/** Replace all local data with the contents of a backup file. */
+/** Replace all local data with a backup, returning a snapshot of the PRIOR data for undo. */
 export function useImportBackup() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (file: File) => {
-      const text = await file.text();
-      const data = JSON.parse(text) as BackupData;
+    mutationFn: async (data: BackupData) => {
+      const snapshot = await getStore().backup.exportAll();
       await getStore().backup.importAll(data);
+      return snapshot;
     },
     onSuccess: () => qc.invalidateQueries(),
   });
