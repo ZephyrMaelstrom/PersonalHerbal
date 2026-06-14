@@ -10,6 +10,9 @@ import { TodayScreen } from '@/routes/today';
 import { SpeciesListScreen } from '@/routes/species-list';
 import { SpeciesNewScreen } from '@/routes/species-new';
 import { SpeciesDetailScreen } from '@/routes/species-detail';
+import { SpeciesEditScreen } from '@/routes/species-edit';
+import { ReferenceGenerateScreen } from '@/routes/reference-generate';
+import { SettingsScreen } from '@/routes/settings';
 
 const rootRoute = createRootRoute({
   component: () => (
@@ -27,12 +30,26 @@ const speciesDetailRoute = createRoute({
   path: '/species/$speciesId',
   component: SpeciesDetailScreen,
 });
+const speciesEditRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/species/$speciesId/edit',
+  component: SpeciesEditScreen,
+});
+const referenceGenerateRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/species/$speciesId/reference',
+  component: ReferenceGenerateScreen,
+});
+const settingsRoute = createRoute({ getParentRoute: () => rootRoute, path: '/settings', component: SettingsScreen });
 
 const routeTree = rootRoute.addChildren([
   indexRoute,
   speciesListRoute,
   speciesNewRoute,
   speciesDetailRoute,
+  speciesEditRoute,
+  referenceGenerateRoute,
+  settingsRoute,
 ]);
 
 // Hash history keeps deep links and hard refreshes working on GitHub Pages (no server

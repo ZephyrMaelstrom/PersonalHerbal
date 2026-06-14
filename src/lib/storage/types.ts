@@ -153,6 +153,11 @@ export interface UserVocabRow extends VocabTerm {
 }
 
 export type SpeciesInput = Omit<Species, 'id' | 'createdAt' | 'updatedAt'>;
+/** A new reference version; the store assigns id/version/isCurrent/generatedAt. */
+export type SpeciesReferenceInput = Pick<
+  SpeciesReference,
+  'speciesId' | 'model' | 'promptVersion' | 'contentHash' | 'content' | 'citationsPresent'
+>;
 export type PlaceInput = Omit<Place, 'id' | 'createdAt'>;
 export type SightingInput = Omit<Sighting, 'id' | 'createdAt'>;
 export type HarvestInput = Omit<Harvest, 'id' | 'createdAt'>;
@@ -184,6 +189,10 @@ export interface DataStore {
   reference: {
     listVersions(speciesId: string): Promise<SpeciesReference[]>;
     current(speciesId: string): Promise<SpeciesReference | undefined>;
+    /** Append a new immutable version and make it the current one. */
+    create(input: SpeciesReferenceInput): Promise<SpeciesReference>;
+    /** Promote an existing version to be the current one. */
+    setCurrent(speciesId: string, id: string): Promise<void>;
   };
 
   places: {

@@ -7,6 +7,7 @@ export type {
   SpeciesInput,
   SpeciesNotes,
   SpeciesReference,
+  SpeciesReferenceInput,
   UserVocabRow,
   Place,
   PlaceInput,

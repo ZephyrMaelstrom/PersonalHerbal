@@ -17,6 +17,7 @@ import type {
   SpeciesInput,
   SpeciesNotes,
   SpeciesReference,
+  SpeciesReferenceInput,
   UserVocabRow,
 } from './types';
 
@@ -119,6 +120,32 @@ export function createDexieStore(): DataStore {
       async current(speciesId) {
         const versions = await db.reference.where('speciesId').equals(speciesId).toArray();
         return versions.find((v) => v.isCurrent);
+      },
+      async create(input: SpeciesReferenceInput) {
+        const existing = await db.reference.where('speciesId').equals(input.speciesId).toArray();
+        const version = existing.reduce((max, v) => Math.max(max, v.version), 0) + 1;
+        const record: SpeciesReference = {
+          ...input,
+          id: uid(),
+          version,
+          isCurrent: true,
+          generatedAt: new Date().toISOString(),
+        };
+        await db.transaction('rw', db.reference, async () => {
+          for (const v of existing) {
+            if (v.isCurrent) await db.reference.update(v.id, { isCurrent: false });
+          }
+          await db.reference.add(record);
+        });
+        return record;
+      },
+      async setCurrent(speciesId, id) {
+        const versions = await db.reference.where('speciesId').equals(speciesId).toArray();
+        await db.transaction('rw', db.reference, async () => {
+          for (const v of versions) {
+            await db.reference.update(v.id, { isCurrent: v.id === id });
+          }
+        });
       },
     },
 

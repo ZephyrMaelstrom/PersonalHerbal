@@ -1,5 +1,39 @@
 # Changelog
 
+## Phase 3 — AI reference generation, version history, Settings, edit species
+
+Completed the last "coming soon" tab and added the AI layer. Reference pages are
+AI-generated, validated, versioned, and read-only from the notes side — kept strictly
+separate from My Notes, per the two-layer model.
+
+### Added
+- **Settings** screen (new bottom-nav tab): Anthropic API key (stored only on device,
+  shown masked), default model (Opus 4.8 / Sonnet 4.6 / Haiku 4.5), region/bioregion, and
+  units. The key is read only when you explicitly tap Generate.
+- **AI reference generation** (`/species/:id/reference`): model + prompt-template +
+  region + citation-depth + "send my structured attributes" controls, then **Generate →
+  preview (with a changed-fields diff vs the current version) → Save**. Uses the official
+  Anthropic SDK with Claude; output is validated against a Zod schema and retried once on
+  failure. Each generation is stored as an immutable version with model, prompt version,
+  SHA-256 content hash, and timestamp.
+- **Reference tab**: renders the current version as a structured monograph; shows a yellow
+  **"unsourced"** banner when the model returned no citations.
+- **History tab**: browse all versions, view any in a dialog, and **Make current** to
+  promote an older version. Current/unsourced badges included.
+- **Edit species** (`/species/:id/edit`): an Edit button on the species header reopens the
+  full dropdown-first form pre-filled, so you can change or deselect any field as new info
+  arises.
+
+### Privacy & safety
+- AI output is written **only** to the reference layer, never to My Notes.
+- The optional "send my structured attributes" toggle (off by default) sends only
+  controlled-vocabulary attributes — never free-text notes, voice memos, or photos.
+
+### Notes
+- Provider is Claude via the Anthropic SDK (browser mode); the key lives in local
+  device storage only, matching the no-server design. Two new deps: `@anthropic-ai/sdk`
+  and `zod`.
+
 ## Phase 2 — Sightings, Harvests, Preparations, Photos
 
 Replaced four of the five "coming soon" species-detail tabs with working, fully local

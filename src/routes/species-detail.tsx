@@ -1,9 +1,8 @@
 import { useState } from 'react';
 import { Link, useNavigate, useParams } from '@tanstack/react-router';
-import { AlertTriangle, ArrowLeft, Sparkles, Trash2 } from 'lucide-react';
+import { ArrowLeft, Pencil, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Dialog,
@@ -19,32 +18,10 @@ import { SightingsTab } from '@/features/sightings/SightingsTab';
 import { HarvestsTab } from '@/features/harvests/HarvestsTab';
 import { PreparationsTab } from '@/features/preparations/PreparationsTab';
 import { PhotosTab } from '@/features/photos/PhotosTab';
+import { ReferenceTab } from '@/features/reference/ReferenceTab';
+import { HistoryTab } from '@/features/reference/HistoryTab';
 import { useDeleteSpecies, useSpecies } from '@/features/species/hooks';
 import { labelFor } from '@/lib/vocab';
-
-function ComingSoon({ what }: { what: string }) {
-  return (
-    <Card>
-      <CardContent className="py-10 text-center text-sm text-muted-foreground">{what} — coming in a later phase.</CardContent>
-    </Card>
-  );
-}
-
-function ReferenceTab() {
-  return (
-    <div className="space-y-3">
-      <div className="flex items-start gap-2 rounded-md border border-yellow-500/30 bg-yellow-500/5 p-3">
-        <AlertTriangle className="mt-0.5 size-4 shrink-0 text-yellow-400" />
-        <p className="text-xs text-muted-foreground">
-          No reference page generated yet. The AI-generated, citation-aware wiki layer arrives in a later phase. This tab is read-only.
-        </p>
-      </div>
-      <Button disabled className="w-full" variant="outline">
-        <Sparkles /> Generate reference page (coming soon)
-      </Button>
-    </div>
-  );
-}
 
 export function SpeciesDetailScreen() {
   const { speciesId } = useParams({ strict: false }) as { speciesId: string };
@@ -75,11 +52,18 @@ export function SpeciesDetailScreen() {
 
   return (
     <div className="space-y-4">
-      <Button asChild variant="ghost" size="sm" className="-ml-2">
-        <Link to="/species">
-          <ArrowLeft /> Species
-        </Link>
-      </Button>
+      <div className="flex items-center justify-between">
+        <Button asChild variant="ghost" size="sm" className="-ml-2">
+          <Link to="/species">
+            <ArrowLeft /> Species
+          </Link>
+        </Button>
+        <Button asChild variant="outline" size="sm">
+          <Link to="/species/$speciesId/edit" params={{ speciesId: species.id }}>
+            <Pencil /> Edit
+          </Link>
+        </Button>
+      </div>
 
       <header className="space-y-2">
         <h1 className="text-2xl font-semibold italic tracking-tight">{species.scientificName}</h1>
@@ -107,7 +91,7 @@ export function SpeciesDetailScreen() {
           <TabsTrigger value="history">History</TabsTrigger>
         </TabsList>
         <TabsContent value="reference">
-          <ReferenceTab />
+          <ReferenceTab speciesId={species.id} />
         </TabsContent>
         <TabsContent value="notes">
           <NotesTab speciesId={species.id} />
@@ -125,7 +109,7 @@ export function SpeciesDetailScreen() {
           <PhotosTab speciesId={species.id} />
         </TabsContent>
         <TabsContent value="history">
-          <ComingSoon what="Reference version history" />
+          <HistoryTab speciesId={species.id} />
         </TabsContent>
       </Tabs>
 

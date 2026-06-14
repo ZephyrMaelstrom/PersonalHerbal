@@ -1,12 +1,13 @@
 import type { ReactNode } from 'react';
 import { Link, useRouterState } from '@tanstack/react-router';
-import { Home, Leaf, Plus } from 'lucide-react';
+import { Home, Leaf, Plus, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const NAV = [
   { to: '/', label: 'Today', icon: Home, exact: true },
   { to: '/species', label: 'Species', icon: Leaf, exact: false },
   { to: '/species/new', label: 'Add', icon: Plus, exact: true },
+  { to: '/settings', label: 'Settings', icon: Settings, exact: true },
 ] as const;
 
 export function AppShell({ children }: { children: ReactNode }) {
