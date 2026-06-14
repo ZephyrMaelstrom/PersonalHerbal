@@ -18,6 +18,7 @@ import { CalendarScreen } from '@/routes/calendar';
 import { PlacesScreen } from '@/routes/places';
 import { CaptureScreen } from '@/routes/capture';
 import { FindsMapScreen } from '@/routes/map';
+import { ProgressScreen } from '@/routes/progress';
 
 const rootRoute = createRootRoute({
   component: () => (
@@ -51,6 +52,7 @@ const calendarRoute = createRoute({ getParentRoute: () => rootRoute, path: '/cal
 const placesRoute = createRoute({ getParentRoute: () => rootRoute, path: '/places', component: PlacesScreen });
 const captureRoute = createRoute({ getParentRoute: () => rootRoute, path: '/capture', component: CaptureScreen });
 const mapRoute = createRoute({ getParentRoute: () => rootRoute, path: '/map', component: FindsMapScreen });
+const progressRoute = createRoute({ getParentRoute: () => rootRoute, path: '/progress', component: ProgressScreen });
 
 const routeTree = rootRoute.addChildren([
   indexRoute,
@@ -65,6 +67,7 @@ const routeTree = rootRoute.addChildren([
   placesRoute,
   captureRoute,
   mapRoute,
+  progressRoute,
 ]);
 
 // Hash history keeps deep links and hard refreshes working on GitHub Pages (no server

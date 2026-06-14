@@ -4,6 +4,7 @@ import {
   AlertTriangle,
   CalendarDays,
   FlaskConical,
+  Flame,
   Leaf,
   Map as MapIcon,
   MapPin,
@@ -12,6 +13,7 @@ import {
   Sparkles,
   Sunrise,
   Sunset,
+  Trophy,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -25,6 +27,7 @@ import { SpeciesPhotoThumb } from '@/features/photos/SpeciesPhotoThumb';
 import { useAllHarvests, useAllPreparations, useAllSightings } from '@/features/dashboard/hooks';
 import { useJournal } from '@/features/journal/hooks';
 import { useSaveSettings, useSettings } from '@/features/settings/hooks';
+import { useProgressStats } from '@/features/progress/hooks';
 
 const QUICK_LINKS = [
   { to: '/journal', label: 'Journal', icon: NotebookPen },
@@ -43,6 +46,7 @@ export function TodayScreen() {
   const { data: journal = [] } = useJournal();
   const { data: settings } = useSettings();
   const saveSettings = useSaveSettings();
+  const progress = useProgressStats();
 
   const now = new Date();
   const todayLabel = now.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' });
@@ -165,6 +169,24 @@ export function TodayScreen() {
           </Button>
         </CardContent>
       </Card>
+
+      {settings?.gamification && (
+        <Link to="/progress">
+          <Card className="transition-colors hover:border-primary/50">
+            <CardContent className="flex items-center gap-4 p-4">
+              <Trophy className="size-5 shrink-0 text-primary" />
+              <div className="flex-1">
+                <p className="text-sm font-medium">Level {progress.level}</p>
+                <p className="text-xs text-muted-foreground">{progress.points} pts</p>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <Flame className={progress.streak > 0 ? 'size-5 text-orange-400' : 'size-5 text-muted-foreground'} />
+                <span className="text-lg font-semibold">{progress.streak}</span>
+              </div>
+            </CardContent>
+          </Card>
+        </Link>
+      )}
 
       <div className="grid grid-cols-4 gap-2">
         {QUICK_LINKS.map(({ to, label, icon: Icon }) => (

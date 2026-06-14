@@ -4,6 +4,8 @@ import { CalendarDays, Camera, Home, Leaf, NotebookPen, Settings, WifiOff } from
 import { cn } from '@/lib/utils';
 import { useOnline } from '@/lib/pwa';
 import { ReloadPrompt } from '@/components/layout/ReloadPrompt';
+import { useSettings } from '@/features/settings/hooks';
+import { useAchievementsWatcher } from '@/features/progress/hooks';
 
 const NAV = [
   { to: '/', label: 'Today', icon: Home, exact: true },
@@ -16,6 +18,8 @@ const NAV = [
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const online = useOnline();
+  const { data: settings } = useSettings();
+  useAchievementsWatcher(settings?.gamification ?? false);
 
   return (
     <div className="mx-auto flex min-h-full max-w-screen-sm flex-col">

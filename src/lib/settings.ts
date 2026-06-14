@@ -14,6 +14,8 @@ export interface AppSettings {
   homeLat?: number;
   homeLng?: number;
   units: 'imperial' | 'metric';
+  /** Opt-in: streak, level, and achievements. Off by default to keep the calm tool feel. */
+  gamification: boolean;
 }
 
 export const AI_MODELS = [
@@ -29,6 +31,7 @@ const DEFAULTS: AppSettings = {
   model: 'claude-opus-4-8',
   region: '',
   units: 'imperial',
+  gamification: false,
 };
 
 export function loadSettings(): AppSettings {

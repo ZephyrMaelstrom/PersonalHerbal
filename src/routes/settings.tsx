@@ -120,6 +120,20 @@ export function SettingsScreen() {
         </Field>
       </section>
 
+      <section className="space-y-4">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Progress &amp; achievements</h2>
+        <Field label="Gamification" hint="Adds a streak, level, and achievements. Off by default.">
+          <div className="flex gap-2">
+            <Choice active={form.gamification} onClick={() => set('gamification', true)}>
+              On
+            </Choice>
+            <Choice active={!form.gamification} onClick={() => set('gamification', false)}>
+              Off
+            </Choice>
+          </div>
+        </Field>
+      </section>
+
       <div className="flex items-center gap-3">
         <Button
           onClick={() => save.mutate(form, { onSuccess: () => setSavedAt(new Date().toLocaleTimeString()) })}

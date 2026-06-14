@@ -1,5 +1,16 @@
 # Changelog
 
+## Phase 5c — Progress & rituals (engagement drop 3, opt-in)
+
+Off by default; enable under Settings → Progress & achievements.
+
+### Added
+- **Progress screen** (`/progress`): a level + points bar, a daily-activity **streak**, stat
+  tiles, and **13 achievements** (locked/unlocked), all derived from your existing data.
+- **Achievement unlock toasts** — earned achievements pop a toast app-wide (initialization
+  seeds silently after data loads, so enabling never floods past progress).
+- A compact **level/streak card** on Today when enabled.
+
 ## Phase 5b — Visual herbarium (engagement drop 2)
 
 ### Added
