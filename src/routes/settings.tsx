@@ -21,6 +21,7 @@ import {
   useImportBackup,
   useRestoreSnapshot,
   useSaveSettings,
+  useSeedGen1,
   useSettings,
   useSnapshots,
 } from '@/features/settings/hooks';
@@ -53,7 +54,16 @@ export function SettingsScreen() {
   const { data: snapshots = [] } = useSnapshots();
   const restoreSnapshot = useRestoreSnapshot();
   const cloudBackup = useCloudBackup();
+  const seedGen1 = useSeedGen1();
   const { toast } = useToast();
+
+  function loadGen1() {
+    seedGen1.mutate(undefined, {
+      onSuccess: ({ added }) =>
+        toast({ message: added > 0 ? `Added ${added} Gen 1 species` : 'Gen 1 already loaded' }),
+      onError: () => toast({ message: 'Could not load Gen 1' }),
+    });
+  }
 
   function backupToCloud() {
     cloudBackup.mutate(true, {
@@ -304,6 +314,17 @@ export function SettingsScreen() {
         </Button>
         {savedAt && <span className="text-xs text-muted-foreground">Saved at {savedAt}</span>}
       </div>
+
+      <section className="space-y-3 border-t pt-5">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Starter data</h2>
+        <p className="text-xs text-muted-foreground">
+          Load <strong>Gen 1 of the FloraDex</strong> — ~135 Midwest roadside plants with edibility and season tags,
+          plus an intro foraging lesson in your Journal. Idempotent: it skips anything you already have.
+        </p>
+        <Button variant="outline" disabled={seedGen1.isPending} onClick={loadGen1}>
+          {seedGen1.isPending ? 'Loading…' : 'Load Gen 1 FloraDex'}
+        </Button>
+      </section>
 
       <section className="space-y-3 border-t pt-5">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Backup &amp; restore</h2>

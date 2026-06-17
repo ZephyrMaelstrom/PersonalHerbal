@@ -1,5 +1,16 @@
 # Changelog
 
+## Phase 9 — Gen 1 FloraDex seed + intro lesson
+
+- **Gen 1 FloraDex** — a curated ~135-plant Midwest roadside set (`src/lib/seed/gen1-data.ts`)
+  with scientific + common names, a conservative edibility bucket derived from each plant's
+  E/M/D/☠ flags, and season tags. **Auto-seeds on a fresh (empty, never-seeded) install**, and
+  a **"Load Gen 1 FloraDex"** button in Settings loads it onto an existing install (idempotent —
+  matches by scientific name and skips duplicates).
+- **Intro lesson** — a "Midwest Roadside Foraging — Gen 1" entry added to the Journal (editable,
+  printable/exportable): the cardinal rule, the deadly carrot-family cluster, other lethal
+  headliners, classic look-alike pairs, the E/M/D/☠/⚠ legend, and how to work through the set.
+
 ## Phase 8c — Polish, scale & reach
 
 ### Added

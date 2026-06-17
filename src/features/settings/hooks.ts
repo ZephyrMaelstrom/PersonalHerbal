@@ -86,6 +86,18 @@ export function useCloudAutoBackup() {
   }, [qc]);
 }
 
+/** Load the Gen 1 FloraDex seed (idempotent — skips species you already have). */
+export function useSeedGen1() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async () => {
+      const { seedGen1 } = await import('@/features/seed/seed');
+      return seedGen1();
+    },
+    onSuccess: () => qc.invalidateQueries(),
+  });
+}
+
 /** On-device automatic restore points. */
 export function useSnapshots() {
   return useQuery({ queryKey: ['snapshots'], queryFn: () => getStore().snapshots.list() });

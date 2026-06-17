@@ -16,12 +16,24 @@ const queryClient = new QueryClient({
   defaultOptions: { queries: { staleTime: 1000 * 30, retry: false } },
 });
 
-// Open the local store eagerly so the first query doesn't race initialization, then take an
-// automatic on-device restore point (throttled + change-detected inside maybeAuto).
-void getStore()
-  .ready()
-  .then(() => getStore().snapshots.maybeAuto())
-  .catch(() => {});
+// Open the local store, seed Gen 1 on a truly fresh (empty, never-seeded) install, then take
+// an automatic restore point. Seeding runs in the background and refreshes queries when done.
+async function init() {
+  await getStore().ready();
+  const { gen1AlreadySeeded, markGen1Seeded } = await import('@/features/seed/seed');
+  if (!gen1AlreadySeeded()) {
+    const empty = (await getStore().species.list()).length === 0;
+    if (empty) {
+      const { seedGen1 } = await import('@/features/seed/seed');
+      await seedGen1();
+      await queryClient.invalidateQueries();
+    } else {
+      markGen1Seeded(); // existing data — don't auto-seed; the Settings button can load it
+    }
+  }
+  await getStore().snapshots.maybeAuto();
+}
+void init().catch(() => {});
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
